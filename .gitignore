@@ -1,4 +1,5 @@
 src/*.o
 src/*.mod
 util/__pycache__
+src/flac
 src/*.diff
