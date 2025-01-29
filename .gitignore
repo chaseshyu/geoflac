@@ -29,3 +29,6 @@ src/*.gcda
 src/*.gcno
 src/*.gcov
 
+# code env
+*.code-workspace
+
