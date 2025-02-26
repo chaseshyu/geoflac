@@ -12,6 +12,7 @@ util/__pycache__
 
 # results created by flac under examples/
 examples/**
+examples*/**
 !examples/*.inp
 benchmark/**
 !benchmark/*.inp
