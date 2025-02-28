@@ -34,7 +34,9 @@ integer :: nx,nz,nzonx,nzony,nelz_x(maxzone),nelz_y(maxzone), &
      movegrid,ndim,ifreq_visc,i_rey, &
      incoming_left,incoming_right, &
      ivis_present,idt_scale,ifreq_imasses,ifreq_rmasses, &
-     nloop,ifreq_avgsr,nsrate
+     nloop,ifreq_avgsr,nsrate, &
+     ! magma migration related
+     isolidus,ix1t,ix2t,iy1t,iy2t,igeotherm
 
 !$ACC declare create(nx,nz,nzonx,nzony,nelz_x(maxzone),nelz_y(maxzone), &
 !$ACC     ny_rem,mode_rem,ntest_rem,ivis_shape, &
@@ -58,7 +60,8 @@ integer :: nx,nz,nzonx,nzony,nelz_x(maxzone),nelz_y(maxzone), &
 !$ACC     movegrid,ndim,ifreq_visc,i_rey, &
 !$ACC     incoming_left,incoming_right, &
 !$ACC     ivis_present,idt_scale,ifreq_imasses,ifreq_rmasses, &
-!$ACC     nloop,ifreq_avgsr,nsrate)
+!$ACC     nloop,ifreq_avgsr,nsrate, &
+!$ACC     isolidus,ix1t,ix2t,iy1t,iy2t,igeotherm)
 
 real*8 :: x0,z0,rxbo,rzbo,sizez_x(maxzone),sizez_y(maxzone), &
      dx_rem,angle_rem,topo_kappa,fac_kappa, &
@@ -87,7 +90,9 @@ real*8 :: x0,z0,rxbo,rzbo,sizez_x(maxzone),sizez_y(maxzone), &
      latent_heat_magma,lambda_freeze,lambda_freeze_tdep, &
      weaken_ratio_plastic,weaken_ratio_viscous, &
      dtavg, &
-     time,dt,time_max
+     time,dt,time_max, &
+     ! magma migration related
+     temp_per,g_x0,g_y0c,g_amplitude,g_width,width_mzone,ratio_crust_mzone
 
 !$ACC declare create(x0,z0,rxbo,rzbo,sizez_x(maxzone),sizez_y(maxzone), &
 !$ACC     dx_rem,angle_rem,topo_kappa,fac_kappa, &
@@ -116,7 +121,8 @@ real*8 :: x0,z0,rxbo,rzbo,sizez_x(maxzone),sizez_y(maxzone), &
 !$ACC     latent_heat_magma,lambda_freeze,lambda_freeze_tdep, &
 !$ACC     weaken_ratio_plastic,weaken_ratio_viscous, &
 !$ACC     dtavg, &
-!$ACC     time,dt,time_max)
+!$ACC     time,dt,time_max, &
+!$ACC     temp_per,g_x0,g_y0c,g_amplitude,g_width,width_mzone,ratio_crust_mzone)
 
 character phasefile*20,tempfile*20,coordfile*20
 

@@ -208,7 +208,8 @@ SRCS =	\
 	rmasses.f90 \
 	rsflac.f90 \
 	saveflac.f90 \
-	setflac.f90
+	setflac.f90 \
+	user_luc.f90
 
 SRCS2 = check_nan.f90
 
