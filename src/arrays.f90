@@ -21,7 +21,8 @@ module arrays
       temp0(:,:),source(:,:),shrheat(:,:), &
       bcstress(:,:), &
       ! magma migration related
-      xlab(:),tsol(:,:),tliq(:,:),tliquc(:,:),tsoluc(:,:),tsollc(:,:),tliqlc(:,:)
+      xlab(:),tsol(:,:),tliq(:,:),tliquc(:,:),tsoluc(:,:),tsollc(:,:),tliqlc(:,:), &
+      avT(:,:),Eff_melt(:,:), zpressm(:,:),deltaTLH(:,:)
 
   double precision, allocatable :: se2sr(:,:), sshrheat(:,:)
 
@@ -94,7 +95,11 @@ contains
     allocate(itmp(nz, nx))
 
     ! magma migration related
+    allocate(Eff_melt(nz-1,nx-1))
+    allocate(avT(nz-1, nx-1))
     allocate(xlab(nx))
+    allocate(zpressm(nz-1,nx-1))
+    allocate(deltaTLH(nz-1,nx-1))
     allocate(tsol(nz-1,nx-1))
     allocate(tliq(nz-1, nx-1))
     allocate(tliquc(nz-1, nx-1))

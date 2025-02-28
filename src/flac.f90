@@ -25,6 +25,15 @@ call solidus
 if (mod(nloop, istart_profile) .lt. 10) call nvtxEndRange()
 #endif
 
+!Update melt production
+!TEMPORARILY COMMENTED OUT MELT_PROD - NICHOLAS
+#ifdef USE_NVTX
+if (mod(nloop, istart_profile) .lt. 10) call nvtxStartRange('melt_prod')
+#endif
+call melt_prod
+#ifdef USE_NVTX
+if (mod(nloop, istart_profile) .lt. 10) call nvtxEndRange()
+#endif
 
 ! Update Thermal State
 ! Skip the therm calculations if itherm = 3

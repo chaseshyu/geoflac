@@ -210,7 +210,8 @@ SRCS =	\
 	saveflac.f90 \
 	setflac.f90 \
 	user_luc.f90 \
-	solidus.f90
+	solidus.f90 \
+    melt_prod.f90
 
 SRCS2 = check_nan.f90
 

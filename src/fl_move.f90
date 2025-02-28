@@ -216,32 +216,32 @@ if( topo_kappa .gt. 0.d0 ) then
     enddo
 endif
 
-! magma extrusion
-arc_extrusion_rate = 1.d0 - ratio_mantle_mzone
-if (arc_extrusion_rate > 0) then
-    !$ACC parallel loop async(1)
-    do i = 2, nx-2  ! avoid edge elements, which should not contain arc magma
-        totalmelt = 0
-        !$ACC loop reduction(+:totalmelt)
-        do j = 1, nz-1
-            quad_area = 0.5d0/area(j,i,1) + 0.5d0/area(j,i,2)
-            ! volume of the melt in this column
-            totalmelt = totalmelt + quad_area * fmelt(j,i)
-        enddo
-        ! height of extrusion in this column
-        extrusion(i) = arc_extrusion_rate * dt * totalmelt * prod_magma &
-            / (cord(1,i+1,1) - cord(1,i,1) + 0.5d0 * (cord(1,i,1) - cord(1,i-1,1) + cord(1,i+2,1) - cord(1,i+1,1)))
-        !print *, i, extrusion(i), totalmelt
-        extr_acc(i) = extr_acc(i) + extrusion(i)
-        !$ACC atomic update
-        cord(1,i,2) = cord(1,i,2) + extrusion(i)
-        !$ACC atomic update
-        cord(1,i+1,2) = cord(1,i+1,2) + extrusion(i)
-    enddo
-endif
+! ! magma extrusion
+! arc_extrusion_rate = 1.d0 - ratio_mantle_mzone
+! if (arc_extrusion_rate > 0) then
+!     !$ACC parallel loop async(1)
+!     do i = 2, nx-2  ! avoid edge elements, which should not contain arc magma
+!         totalmelt = 0
+!         !$ACC loop reduction(+:totalmelt)
+!         do j = 1, nz-1
+!             quad_area = 0.5d0/area(j,i,1) + 0.5d0/area(j,i,2)
+!             ! volume of the melt in this column
+!             totalmelt = totalmelt + quad_area * fmelt(j,i)
+!         enddo
+!         ! height of extrusion in this column
+!         extrusion(i) = arc_extrusion_rate * dt * totalmelt * prod_magma &
+!             / (cord(1,i+1,1) - cord(1,i,1) + 0.5d0 * (cord(1,i,1) - cord(1,i-1,1) + cord(1,i+2,1) - cord(1,i+1,1)))
+!         !print *, i, extrusion(i), totalmelt
+!         extr_acc(i) = extr_acc(i) + extrusion(i)
+!         !$ACC atomic update
+!         cord(1,i,2) = cord(1,i,2) + extrusion(i)
+!         !$ACC atomic update
+!         cord(1,i+1,2) = cord(1,i+1,2) + extrusion(i)
+!     enddo
+! endif
 
 ! adjust markers
-if (topo_kappa > 0 .or. arc_extrusion_rate > 0) then
+if (topo_kappa > 0) then
     if(mod(nloop, ifreq_avgsr) .eq. 0) then
 !!$        print *, 'max sed/erosion rate (m/yr):' &
 !!$             , maxval(dtopo(1:nx)) * 3.16d7 / dt &

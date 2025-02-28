@@ -98,14 +98,25 @@ do k = 1, 3
     call rem_interpolate( nzt, nxt, dummye, strain(:,:,k) )
 end do
 
-
 ! plastic strain
 call rem_interpolate( nzt, nxt, dummye, aps )
 
 ! Magma fraction
-if (itype_melting == 1) then
+if (itype_melting .ge. 1) then
     call rem_interpolate( nzt, nxt, dummye, fmagma )
+    !$OMP parallel do private(i,j)
+    do i = 1, nxt
+        do j = 1, nzt
+            if( fmagma(j,i) .gt. fmagma_max ) then
+                fmagma(j,i) = fmagma_max
+            endif
+        end do
+    end do
+    !$OMP end parallel do
 endif
+
+! Interpolate accumulated melt for melt_prod
+call rem_interpolate( nzt, nxt, dummye, Eff_melt )
 
 
 !$OMP parallel do

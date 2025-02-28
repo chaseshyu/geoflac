@@ -24,7 +24,20 @@ dvol = 0
 strain = 0
 
 ! Magma migration related
+Eff_melt = 0.
 icrust_melt = 1
+zpressm = 0.
+
+watercont = 0.000000 !wt fraction
+xmodalcpx = 0.03 !wt fraction
+xDF(1) = 0.0 !Initiatilize DF
+xDT(1) = 0.0 !Initialize DT
+dumC(1) = 0.0 !Runge Kutta
+dumC(2) = 0.5 !Runge Kutta
+dumC(3) = 0.5 !Runge Kutta
+dumC(4) = 1.0 !Runge Kutta
+istart_profile = 500
+
 
 ! Phases in the mesh
 call init_phase
@@ -104,7 +117,7 @@ include 'precision.inc'
 !$ACC     incoming_left,incoming_right, &
 !$ACC     ivis_present,idt_scale,ifreq_imasses,ifreq_rmasses, &
 !$ACC     nloop,ifreq_avgsr,nsrate, &
-!$ACC     isolidus,ix1t,ix2t,iy1t,iy2t,igeotherm,icrust_melt) async(1)
+!$ACC     isolidus,ix1t,ix2t,iy1t,iy2t,igeotherm,icrust_melt,istart_profile) async(1)
 
 !$ACC update device(x0,z0,rxbo,rzbo,sizez_x(maxzone),sizez_y(maxzone), &
 !$ACC     dx_rem,angle_rem,topo_kappa,fac_kappa, &
@@ -134,5 +147,6 @@ include 'precision.inc'
 !$ACC     weaken_ratio_plastic,weaken_ratio_viscous, &
 !$ACC     dtavg, &
 !$ACC     time,dt,time_max,
-!$ACC     temp_per,g_x0,g_y0c,g_amplitude,g_width,width_mzone,ratio_crust_mzone) async(1)
+!$ACC     temp_per,g_x0,g_y0c,g_amplitude,g_width,width_mzone,ratio_crust_mzone, &
+!$ACC     watercont,xmodalcpx,dumC(4),xDF(4),xDT(4)) async(1)
 end
