@@ -19,7 +19,9 @@ module arrays
       strainr(:,:,:,:), flux(:,:,:,:), &
       aps(:,:),visn(:,:),e2sr(:,:), &
       temp0(:,:),source(:,:),shrheat(:,:), &
-      bcstress(:,:)
+      bcstress(:,:), &
+      ! magma migration related
+      xlab(:)
 
   double precision, allocatable :: se2sr(:,:), sshrheat(:,:)
 
@@ -91,6 +93,8 @@ contains
     allocate(stmpn(max(nx,nz)))
     allocate(itmp(nz, nx))
 
+    ! magma migration related
+    allocate(xlab(nx))
   end subroutine allocate_arrays
 
 end module arrays
