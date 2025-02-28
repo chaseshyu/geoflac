@@ -36,7 +36,7 @@ integer :: nx,nz,nzonx,nzony,nelz_x(maxzone),nelz_y(maxzone), &
      ivis_present,idt_scale,ifreq_imasses,ifreq_rmasses, &
      nloop,ifreq_avgsr,nsrate, &
      ! magma migration related
-     isolidus,ix1t,ix2t,iy1t,iy2t,igeotherm
+     isolidus,ix1t,ix2t,iy1t,iy2t,igeotherm,icrust_melt
 
 !$ACC declare create(nx,nz,nzonx,nzony,nelz_x(maxzone),nelz_y(maxzone), &
 !$ACC     ny_rem,mode_rem,ntest_rem,ivis_shape, &
@@ -61,7 +61,7 @@ integer :: nx,nz,nzonx,nzony,nelz_x(maxzone),nelz_y(maxzone), &
 !$ACC     incoming_left,incoming_right, &
 !$ACC     ivis_present,idt_scale,ifreq_imasses,ifreq_rmasses, &
 !$ACC     nloop,ifreq_avgsr,nsrate, &
-!$ACC     isolidus,ix1t,ix2t,iy1t,iy2t,igeotherm)
+!$ACC     isolidus,ix1t,ix2t,iy1t,iy2t,igeotherm,icrust_melt)
 
 real*8 :: x0,z0,rxbo,rzbo,sizez_x(maxzone),sizez_y(maxzone), &
      dx_rem,angle_rem,topo_kappa,fac_kappa, &
