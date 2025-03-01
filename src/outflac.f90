@@ -309,12 +309,13 @@ endif
 if( io_diss.eq.1 ) then
     do i = 1, nx-1
         do j = 1, nz-1
-            if(ishearh.ne.0) then
-               iph = iphase(j,i)
-               De(j,i) = real(shrheat(j,i)/den(iph)/hs)
-            else
-               De(j,i) = 0
-            endif
+            ! if(ishearh.ne.0) then
+            !    iph = iphase(j,i)
+            !    De(j,i) = real(shrheat(j,i)/den(iph)/hs)
+            ! else
+            !    De(j,i) = 0
+            ! endif
+            De(j,i) = real(Eff_melt(j,i))
         enddo
     enddo
     open (1,file='diss.0',access='direct',recl=nwords*kindr) 
