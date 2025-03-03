@@ -15,9 +15,7 @@ double precision, external :: CalcF, CalcT, DeltaTwat, calcsolid, stressI
 !===========================================
 !Nodes to Elements, T and P calc, and Initialization
 !===========================================
-!$OMP parallel private(i,j,xpress,dumFF,dumP,DTsol,dumsol,dumF, &
-!$OMP                         dumT,arbar,xpTpP,hP,xpTpF,AvDF,AvDT)
-!$OMP do collapse(2)
+!$OMP parallel do private(i,j,xpress)
 do j = 1,nz-1-10
     do i = 1+5,nx-1-5
         avT(j,i) = 0.25*(temp(j,i) + temp(j,i+1) + temp(j+1,i) + temp(j+1,i+1))
@@ -48,7 +46,7 @@ do j = 1,nz-1-10
         ! endif
     end do
 end do
-!$OMP end do
+!$OMP end parallel do
 
 
 !=================================
@@ -56,7 +54,8 @@ end do
 !=================================
 do iblk = 1,2
 do jblk = 1,2
-!$OMP do collapse(2)
+!$OMP parallel do private(i,j,m,xpress,dumFF,dumP,DTsol,dumsol,hP,dumF,dumT, &
+!$OMP                     arbar,xpTpP,xDF,xDT,AvDF,AvDT)
 do j = jblk,nz-1-34,2
     do i = iblk+10,nx-1-10,2
         xpress = -stressI(j,i)/1.e9 ! Pressure in GPa   
@@ -146,9 +145,9 @@ do j = jblk,nz-1-34,2
             
     end do
 end do
-!$OMP end do
+!$OMP end parallel do
 end do
 end do
-!$OMP end parallel
 
+return
 end subroutine melt_prod

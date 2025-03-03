@@ -27,6 +27,10 @@ strain = 0
 Eff_melt = 0.
 icrust_melt = 1
 zpressm = 0.
+new_intrusion = 0.
+av_intrusion = 0.
+stored_intrusion = 0.
+dv_intr = 0.
 
 watercont = 0.000000 !wt fraction
 xmodalcpx = 0.03 !wt fraction
@@ -117,7 +121,8 @@ include 'precision.inc'
 !$ACC     incoming_left,incoming_right, &
 !$ACC     ivis_present,idt_scale,ifreq_imasses,ifreq_rmasses, &
 !$ACC     nloop,ifreq_avgsr,nsrate, &
-!$ACC     isolidus,ix1t,ix2t,iy1t,iy2t,igeotherm,icrust_melt,istart_profile) async(1)
+!$ACC     isolidus,ix1t,ix2t,iy1t,iy2t,igeotherm,icrust_melt,istart_profile,imagtop, &
+!$ACC     ibasement) async(1)
 
 !$ACC update device(x0,z0,rxbo,rzbo,sizez_x(maxzone),sizez_y(maxzone), &
 !$ACC     dx_rem,angle_rem,topo_kappa,fac_kappa, &

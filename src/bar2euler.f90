@@ -19,6 +19,10 @@ do i = 1 , nmarkers
   ba2 = mark_a2(i)
   ba3 = 1.0d0 - ba1 - ba2
 
+  ! assign the mel values and aps to markers in element
+  mark_zpressn(i) = zpressm(jj,ii)
+  mark_Emeltm(i) = Eff_melt(jj,ii)
+
   if (k .eq. 1) then
     i1 = ii
     i2 = ii

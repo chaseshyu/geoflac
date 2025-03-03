@@ -8,9 +8,11 @@
 subroutine init_areas
 use arrays
 use params
-include 'precision.inc'
+implicit none
+integer :: i,j
+double precision :: x1,y1,x2,y2,x3,y3,x4,y4,det,det1
 
-!$OMP parallel do
+!$OMP parallel do private(i,j,x1,y1,x2,y2,x3,y3,x4,y4,det,det1) collapse(2)
 do i = 1,nx-1
     do j = 1,nz-1
 

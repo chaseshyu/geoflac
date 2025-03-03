@@ -42,7 +42,7 @@ endif
 !$OMP                  delta_fmagma,deltaT,qs,real_area13,area_n,rhs, &
 !$OMP                  jm,area_ratio,z_moho,z_melt,x_melt,h,x,z)
 
-if (itype_melting == 1) then
+if (itype_melting .ge. 1) then
     ! M: fmegma, magma fraction in the element
     ! dM/dt = P - M * fr_lambda
     ! Rearrange after forward Euler for dM/dt
@@ -71,8 +71,12 @@ if (itype_melting == 1) then
             cp_eff = Eff_cp( j,i )
             tmpr = 0.25d0*(temp0(j,i)+temp0(j+1,i)+temp0(j,i+1)+temp0(j+1,i+1))
             fr_lambda = lambda_freeze * exp(-lambda_freeze_tdep * (tmpr-t_top))
-            delta_fmagma = min(fmagma(j,i), fmagma(j,i) * dt * fr_lambda)
+            delta_fmagma = max(fmagma(j,i), fmagma(j,i) * dt * fr_lambda) 
+            ! delta_fmagma = min(fmagma(j,i), fmagma(j,i) * dt * fr_lambda)
             fmagma(j,i) = fmagma(j,i) - delta_fmagma
+
+            fmagma(j,i) = max(0.d0,fmagma(j,i))
+            xfmelt(j,i) = fmagma(j,i)
 
             ! latent heat released by freezing magma
             deltaT = delta_fmagma * latent_heat_magma / cp_eff / 4
@@ -92,52 +96,54 @@ if (itype_melting == 1) then
     enddo
     !$OMP end do
 
-    !$OMP do
-    !$ACC parallel loop collapse(2) async(1)
-    do i = 1,nx-1
-        ! XXX: Assume melting cannot happen above the moho. (j > jmoho(i)) is always true
-        ! starting from j=1, not jmoho(i), so that the loop can be collapsed and faster in computation
-        do j = 1,nz-1
-            jm = jmoho(i)
-            quad_area = 0.5d0/area(j,i,1) + 0.5d0/area(j,i,2) ! area of this element
-            if (j>jm .and. fmelt(j,i) > 0) then
-                ! This element is under melting. The melt will migrate to the
-                ! mantle and crust above. Treat the migration as instantaneous.
+    if (itype_melting .eq. 1) then
+        !$OMP do
+        !$ACC parallel loop collapse(2) async(1)
+        do i = 1,nx-1
+            ! XXX: Assume melting cannot happen above the moho. (j > jmoho(i)) is always true
+            ! starting from j=1, not jmoho(i), so that the loop can be collapsed and faster in computation
+            do j = 1,nz-1
+                jm = jmoho(i)
+                quad_area = 0.5d0/area(j,i,1) + 0.5d0/area(j,i,2) ! area of this element
+                if (j>jm .and. fmelt(j,i) > 0) then
+                    ! This element is under melting. The melt will migrate to the
+                    ! mantle and crust above. Treat the migration as instantaneous.
 
-                ! Within crust, melts migrate by diking, propagate upward vertically
-                ! area_ratio: the area of the crust column / the area of the melting element
-                !     ~ the thickness of the crust column / the thickness of the melting element
-                area_ratio = (cord(1,i,2)+cord(1,i+1,2)-cord(jm,i,2)-cord(jm,i+1,2)) / &
-                    (cord(j,i,2)+cord(j,i+1,2)-cord(j+1,i,2)-cord(j+1,i+1,2))
-                do jj = 1, jm
-                    !$OMP atomic update
-                    !$ACC atomic update
-                    fmagma(jj,i) = fmagma(jj,i) + fmelt(j,i) * (1d0 - ratio_mantle_mzone) * area_ratio * prod_magma * dt
-                enddo
-
-                ! Within mantle, melts migrate by percolation, propagate upward slantly
-                z_moho = 0.5d0 * (cord(jm,i,2) + cord(jm,i+1,2))
-                z_melt = 0.5d0 * (cord(j+1,i,2) + cord(j+1,i+1,2))
-                x_melt = 0.5d0 * (cord(j+1,i,1) + cord(j+1,i+1,1))
-                h = z_moho - z_melt
-                ! area_ratio: the area of the mantle triangle / the area of the melting element
-                area_ratio = h * h * tan_mzone / quad_area
-                ! ii: the potential region of magma distribution zone at moho
-                do ii = max(1,i-ihalfwidth_mzone), min(nx-1,i+ihalfwidth_mzone)
-                    do jj = jmoho(ii)+1, j
-                        x = 0.5d0 * (cord(jj,ii,1) + cord(jj,ii+1,1))
-                        z = 0.5d0 * (cord(jj,ii,2) + cord(jj,ii+1,2))
-                        if (abs(x - x_melt) <= tan_mzone * (z - z_melt)) then
-                            !$OMP atomic update
-                            !$ACC atomic update
-                            fmagma(jj,ii) = fmagma(jj,ii) + fmelt(j,i) * ratio_mantle_mzone * area_ratio * prod_magma * dt
-                        endif
+                    ! Within crust, melts migrate by diking, propagate upward vertically
+                    ! area_ratio: the area of the crust column / the area of the melting element
+                    !     ~ the thickness of the crust column / the thickness of the melting element
+                    area_ratio = (cord(1,i,2)+cord(1,i+1,2)-cord(jm,i,2)-cord(jm,i+1,2)) / &
+                        (cord(j,i,2)+cord(j,i+1,2)-cord(j+1,i,2)-cord(j+1,i+1,2))
+                    do jj = 1, jm
+                        !$OMP atomic update
+                        !$ACC atomic update
+                        fmagma(jj,i) = fmagma(jj,i) + fmelt(j,i) * (1d0 - ratio_mantle_mzone) * area_ratio * prod_magma * dt
                     enddo
-                enddo
-            endif
-            fmagma(j,i) = min(fmagma(j,i), fmagma_max)
+
+                    ! Within mantle, melts migrate by percolation, propagate upward slantly
+                    z_moho = 0.5d0 * (cord(jm,i,2) + cord(jm,i+1,2))
+                    z_melt = 0.5d0 * (cord(j+1,i,2) + cord(j+1,i+1,2))
+                    x_melt = 0.5d0 * (cord(j+1,i,1) + cord(j+1,i+1,1))
+                    h = z_moho - z_melt
+                    ! area_ratio: the area of the mantle triangle / the area of the melting element
+                    area_ratio = h * h * tan_mzone / quad_area
+                    ! ii: the potential region of magma distribution zone at moho
+                    do ii = max(1,i-ihalfwidth_mzone), min(nx-1,i+ihalfwidth_mzone)
+                        do jj = jmoho(ii)+1, j
+                            x = 0.5d0 * (cord(jj,ii,1) + cord(jj,ii+1,1))
+                            z = 0.5d0 * (cord(jj,ii,2) + cord(jj,ii+1,2))
+                            if (abs(x - x_melt) <= tan_mzone * (z - z_melt)) then
+                                !$OMP atomic update
+                                !$ACC atomic update
+                                fmagma(jj,ii) = fmagma(jj,ii) + fmelt(j,i) * ratio_mantle_mzone * area_ratio * prod_magma * dt
+                            endif
+                        enddo
+                    enddo
+                endif
+                fmagma(j,i) = min(fmagma(j,i), fmagma_max)
+            enddo
         enddo
-    enddo
+    end if
 endif
 
 !$ACC parallel loop collapse(2) async(1)
@@ -178,6 +184,16 @@ do i = 1,nx-1
         ! Additional sources - radiogenic and shear heating
         tmpr = 0.25d0*(t1 + t2 + t3 + t4)
         !dummye(j,i) = ( source(j,i) + dissip/den(iph) - 600.d0*cp_eff*Eff_melt(iph,tmpr)) / cp_eff
+
+        ! Calculate pressure change
+        zpress = -stressI(j,i)  !Lith_Pres(j,i) !Pressure in Pa        
+        zdp = zpress - zpressold(j,i) !Calc delta P in Pa
+        if (abs(zdp).gt.1.e6) zdp =0. ! Check for spurrious P changes
+       ! if( mod(nloop, 10).eq.0 ) then
+        zpressm(j,i) = zpress !Save current P as old in Pa
+       ! endif
+        zpressold(j,i) = zpress
+
         dummye(j,i) = ( source(j,i) + dissip/den(iph) ) / cp_eff
 
         ! (1) A element:
@@ -317,7 +333,7 @@ end do
 ! Boundary conditions (top and bottom)
 !$ACC parallel loop async(1)
 !$OMP do
-do i = 1,nx
+do i = 1,nx-1
 
     temp(1,i) = t_top
 
@@ -326,6 +342,19 @@ do i = 1,nx
     elseif( itemp_bc.eq.2 ) then
         cond_eff = Eff_conduct( nz-1, min(i,nx-1) )
         temp(nz,i) = temp(nz-1,i)  +  bot_bc * ( cord(nz-1,i,2)-cord(nz,i,2) ) / cond_eff
+    else if (itemp_bc.eq.3) then
+        do j  = 1,nz-1
+        ! if(irestart.ne.1) then  
+            if (Eff_melt(j,i).eq.0.) then
+                y = (cord(1,i,2)-cord(j,i,2))*1.e-3
+                
+                if (y.gt.xlab(i)) then  ! xlab is 180 km
+                    ! Asth Pot Temp - McKenBickle 1988 Eqn 5
+                    temp(j,i) = bot_bc*exp(9.81*y*0.00004)
+                end if
+            endif
+        !  endif
+        enddo
     endif
 
 end do

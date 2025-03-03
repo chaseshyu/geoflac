@@ -11,6 +11,8 @@ character*200 msg
 !$ACC kernels async(1)
 mark_id_elem(:,:,:) = 0
 nmark_elem(:,:) = 0
+Emeltcounter(:,:) = 0.
+zpresscounter(:,:) = 0.
 !$ACC end kernels
 
 !$OMP parallel do private(n,k,j,i,xx,yy,bar1,bar2,ntr,inc)
@@ -50,6 +52,9 @@ do n = 1 , nmarkers
     !$ACC end atomic
     !$OMP end atomic
     mark_id_elem(kk, j, i) = n
+    zpresscounter(j,i) = zpresscounter(j,i) + mark_zpressn(n)
+    Emeltcounter(j,i) = Emeltcounter(j,i) + mark_Emeltm(n)
+
 enddo
 !$OMP end parallel do
 
