@@ -25,7 +25,7 @@ double precision, parameter :: c1d12 = 1.d0/12.d0
 integer i, j, k, iph, iblk, jblk
 double precision :: dlmin, dtmax_therm, vel_max, dt_m, diff, Eff_cp, Eff_conduct
 double precision :: pwave, dens, vel_sound, rho_inert, rho_inert2, am3, dte, dtt
-double precision :: rmu, visc_cut
+double precision :: rmu, visc_cut, vis_min, vel_sound_tmp
 
 ! minimal propagation distance
 dlmin = dlmin_prop()
@@ -42,7 +42,6 @@ elseif (idt_scale.eq.2) then
     else
 !write(*,'(5F45.20)')dt_elastic,dlmin,frac,strain_inert,vbc
         dt_elastic = dlmin*frac*strain_inert/vbc
-!write(*,'(F45.20)')dt_elastic
     endif
 endif
 
@@ -51,13 +50,21 @@ dt_maxwell = 1.d+28
 !$ACC update device(dt_elastic, dt_maxwell) async(1)
 
 vel_max = 0.d0
-
+!$OMP parallel do private(i,j) reduction(max:vel_max)
 !$ACC parallel loop collapse(3) reduction(max:vel_max) async(1)
 do k = 1,2
 do i = 1,nx
 do j = 1,nz
    vel_max = max(vel_max,abs(vel(j,i,k)))
 enddo
+enddo
+enddo
+
+vis_min = 1.e30
+!$OMP parallel do private(i,j) reduction(min:vis_min)
+do i = 1,nx-1
+do j = 1,nz-1
+    vis_min = min(vis_min,visn(j,i))
 enddo
 enddo
 
@@ -71,23 +78,28 @@ else
 !$ACC end kernels
 end if
 
+vel_sound = dlmin*frac/dt_elastic
+
 do iblk = 1, 2
     do jblk = 1, 2
-        !$OMP parallel do private(iph, pwave, dens, vel_sound, rho_inert, rho_inert2, &
-        !$OMP                     am3, dte, diff, dtt, dt_m, rmu)
+        !$OMP parallel do private(iph, pwave, dens, rho_inert, rho_inert2, vel_sound_tmp, &
+        !$OMP                     am3, dte, diff, dtt, dt_m, rmu) reduction(min:dt_elastic,dtmax_therm, dt_maxwell)
         !$ACC parallel loop collapse(2) reduction(min:dt_elastic,dtmax_therm,dt_maxwell) async(1)
         do i = iblk, nx-1, 2
             do j = jblk, nz-1, 2
-
                 iph     = iphase(j,i)
                 pwave   = rl(iph) + 0.6666d0*rm(iph)
+                if (vis_min.lt.visc_cut) pwave = rl(iph) + 0.6666*rm(iph)*vis_min/visc_cut 
                 dens    = den(iph)
-                vel_sound = dlmin*frac/dt_elastic
                 rho_inert = pwave/(vel_sound*vel_sound)
-                if (i_rey.eq.1.and.vel_max.gt.0.d0) then
+                if (i_rey.eq.1.and.vel_max.gt.vbc) then
                     rho_inert2 = (xReyn*v_min)/(vel_max*abs(rzbo))
         !           write(*,*) rho_inert, rho_inert2,vel_max
-                    if (rho_inert.gt.rho_inert2) rho_inert = rho_inert2
+                    if (rho_inert.gt.rho_inert2) then
+                        rho_inert = rho_inert2
+                        vel_sound_tmp = sqrt(pwave/rho_inert2)
+                        dt_elastic = min(dt_elastic,dlmin*frac/vel_sound_tmp)
+                    endif
                 endif
                 ! Find the inert. density for given geometry, elas_mod and dt_scale
                 ! idt_scale = 0 (dt = frac*dx_min * sqrt(dens/pwave) )
@@ -128,19 +140,19 @@ do iblk = 1, 2
                 ! dtmax = dxmin^2/diffusivity = dx^2/(lyamda/cp*dens)
                 diff = Eff_conduct(j,i)/den(iph)/Eff_cp(j,i)
                 dtt = dlmin*dlmin/diff
-                dtmax_therm =min (dtmax_therm,dtt)
+                dtmax_therm = min(dtmax_therm,dtt)
 
                 ! Calculate maxwell time step
                 if (ivis_present .eq. 1) then
                     !dt_m =visn(j,i)/rm(iph)*fracm
                     if( (irheol(iph).eq.3 .OR. irheol(iph).eq.12) .AND. rm(iph).lt.1.d+11 ) then
-                        visc_cut = 1.d+10
-                        if( v_min .lt. visc_cut ) then
-                            rmu = rm(iph) * v_min/visc_cut
+                        visc_cut = 1.d+17
+                        if( vis_min .lt. visc_cut ) then
+                            rmu = rm(iph) * vis_min/visc_cut
                         else
                             rmu = rm(iph)
                         endif
-                        dt_m =v_min/rmu * fracm
+                        dt_m =vis_min/rmu * fracm
                         dt_maxwell = min (dt_m,dt_maxwell)
                     endif
                 endif
@@ -148,13 +160,13 @@ do iblk = 1, 2
             enddo
         enddo
         !$OMP end parallel do
-
     enddo
 enddo
 
 !$ACC update self(dt_elastic, dt_maxwell) async(1)
 dt = min(min(dt_elastic, dt_maxwell), dtmax_therm)
 !$ACC update device(dt) async(1)
+
 return
 end
 
