@@ -61,7 +61,7 @@ if (mod(nloop, istart_profile) .lt. 10) call nvtxEndRange()
 #ifdef USE_NVTX
 if (mod(nloop, istart_profile) .lt. 10) call nvtxStartRange('change_phase')
 #endif
-if( mod(nloop, 2).eq.0 ) call change_phase
+if( mod(nloop, ifreq_rmasses).eq.0 ) call change_phase
 #ifdef USE_NVTX
 if (mod(nloop, istart_profile) .lt. 10) call nvtxEndRange()
 #endif

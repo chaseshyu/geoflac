@@ -40,7 +40,7 @@ dumC(1) = 0.0 !Runge Kutta
 dumC(2) = 0.5 !Runge Kutta
 dumC(3) = 0.5 !Runge Kutta
 dumC(4) = 1.0 !Runge Kutta
-istart_profile = 500
+istart_profile = 50
 
 
 ! Phases in the mesh
