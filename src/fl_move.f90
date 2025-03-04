@@ -152,6 +152,90 @@ enddo
 return
 end subroutine fl_move
 
+subroutine check_camber
+    use arrays
+    use params
+    use phases
+    implicit none
+    double precision :: critmeltfrac(nz-1,nx-1), tmpr, critmelt, testa
+    integer :: i,j,k,ibug,imagcolumn(nx-1),jmagcolumn(nx-1),jmagtop,magtopcount,imag_min,imag_max, knn
+
+
+    imagtop = int((nx-1)/2)
+    imagcolumn(:) = 0
+    jmagcolumn(:) = nz-1
+    ibug = 0
+    
+    critmeltfrac = 0.
+    
+    ! find top magma chambers
+    do i = 1, nx-1
+        k = jmoho(i)    
+        do j = k , nz-1
+            tmpr = 0.25*(temp(j,i)+temp(j+1,i)+temp(j,i+1)+temp(j+1,i+1))
+            if (tmpr.ge.1100.) then
+                critmeltfrac(j,i) = Eff_melt(j,i)
+            endif
+        enddo
+    enddo
+    
+    critmelt = maxval(critmeltfrac)
+    do i = 1, nx-1
+        k = jmoho(i)
+        do j = k , nz-1
+            if (critmeltfrac(j,i) .ge. critmelt) then
+                jmagcolumn(i) = j
+                imagcolumn(i) = i
+                ibug = ibug + 1
+                cycle
+            endif
+        enddo
+    enddo
+    
+    jmagtop = minval(jmagcolumn)
+    print *, imagtop,jmagtop,ibug
+    magtopcount = 0
+    ! find top magma chambers
+    if (ibug .gt. 0 ) then
+        do i = 1, nx-1
+            if (jmagcolumn(i) .eq. jmagtop.and.magtopcount.eq.0) then
+                magtopcount = magtopcount + 1
+                imag_min = imagcolumn(i)
+            endif
+            if (jmagcolumn(i) .eq. jmagtop.and. magtopcount .gt. 0) then
+                magtopcount = magtopcount + 1
+                imag_max = imagcolumn(i)
+            endif
+        enddo
+        if (imag_max.eq.0) then
+            imagtop = imag_min
+        else
+            imagtop = int(0.5*(imag_max+imag_min))
+        endif
+        print *, imagtop
+    endif
+    
+    ! The bottom of the magma need to be 15 km above the max melt fraction ot We produce too much melt
+    !  Find the basement below the extrusives and sediments
+    ibasement = 2! first guess below the extrusives
+    knn = 0
+    do j = 1, nz-1
+        testa = sum(phase_ratio(surface_phases,j,imagtop))
+        if ( testa> 0.5d0 .and. knn == 0) then
+            ibasement = j 
+            knn = knn + 1
+        endif
+    enddo
+    
+    if (ibasement.le.2) then
+        ibasement = 2
+    else
+        ibasement = max(2,ibasement)
+    endif
+    
+return
+end subroutine check_camber
+
 
 subroutine mor_melting
     use arrays
@@ -167,11 +251,10 @@ subroutine mor_melting
     double precision :: xintr, xmu, xsigma, xmelt_migrated, xel_vol, xl_vol
     double precision :: vol_ratio, xdike_migrated
     integer :: i, j, ii, jj, kinc, n_to_add, kk, ichanged, ihalfwidth_mzone
-    double precision :: extru_limit, intru_limit, total_extru_strain, total_intru_strain
-    
+    double precision :: extru_limit, intru_limit, total_extru_strain
+      
     dlmin = dlmin_prop()
     
-            
     max_mig = 70
     av_intrusion = 0.
     new_intrusion = 0.
@@ -185,6 +268,8 @@ subroutine mor_melting
     ratio_crust = 0.0
     ratio_dike = ratio_crust_mzone
     
+    call check_camber
+
     ihalfwidth_mzone = int(width_mzone / 2 / dxmin)
     do i = max(1,ii-2*ihalfwidth_mzone), min(nx-1,ii+2*ihalfwidth_mzone)
         do j = 1, nz-1
@@ -254,6 +339,7 @@ subroutine mor_melting
     ! we impose a max of 2 particles per element for the volume change
     ! We use the same width has where the melt is collected
     do i = max(1,ii-2*ihalfwidth_mzone), min(nx-1,ii+2*ihalfwidth_mzone)
+        ichanged = 0
         xel_vol = 0.5d0/area(1,i,1) + 0.5d0/area(1,i,2)
     
         kinc = nmark_elem(1,i)

@@ -14,6 +14,23 @@ time = 0.d0
 ! Mesh generator
 call init_cord
 
+shrheat = 0
+sshrheat = 0
+dtopo = 0.
+extrusion = 0.
+fmelt = 0.
+fmagma = 0.
+e2sr = 1d-16
+se2sr = 1d-16
+! MOR magma migration related
+zpressm = 0.
+Eff_melt = 0.
+new_intrusion = 0.
+av_intrusion = 0.
+stored_intrusion = 0.
+dv_intr = 0.
+icrust_melt = 1
+
 ! Initial accumulated plastic strain
 aps = 0
 
@@ -23,14 +40,6 @@ vel = 0
 dvol = 0
 strain = 0
 
-! Magma migration related
-Eff_melt = 0.
-icrust_melt = 1
-zpressm = 0.
-new_intrusion = 0.
-av_intrusion = 0.
-stored_intrusion = 0.
-dv_intr = 0.
 
 watercont = 0.000000 !wt fraction
 xmodalcpx = 0.03 !wt fraction
@@ -49,14 +58,17 @@ call init_phase
 ! Setup markers
 call init_marker
 
+! Initiate temperature field
+call init_temp
+
+! Check if melting present
+if (itype_melting .eq. 2) call check_camber
+
 ! Check if viscous rheology present
 call check_visc_rheol
 
 ! Inverse Areas of triangles
 call init_areas
-
-! Initiate temperature field
-call init_temp
 
 ! Calculation of the initial STRESSES (as hydrostatic)
 call init_stress
@@ -65,14 +77,6 @@ call init_stress
 call init_bc
 
 temp0 = temp
-shrheat = 0
-sshrheat = 0
-dtopo = 0
-extrusion = 0
-fmelt = 0
-fmagma = 0
-e2sr = 1d-16
-se2sr = 1d-16
 
 call update_acc
 

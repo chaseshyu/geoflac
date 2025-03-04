@@ -49,6 +49,7 @@ dtmax_therm = 1.d+28
 dt_maxwell = 1.d+28
 !$ACC update device(dt_elastic, dt_maxwell) async(1)
 
+visc_cut = 1.d+17
 vel_max = 0.d0
 !$OMP parallel do private(i,j) reduction(max:vel_max)
 !$ACC parallel loop collapse(3) reduction(max:vel_max) async(1)
@@ -146,7 +147,6 @@ do iblk = 1, 2
                 if (ivis_present .eq. 1) then
                     !dt_m =visn(j,i)/rm(iph)*fracm
                     if( (irheol(iph).eq.3 .OR. irheol(iph).eq.12) .AND. rm(iph).lt.1.d+11 ) then
-                        visc_cut = 1.d+17
                         if( vis_min .lt. visc_cut ) then
                             rmu = rm(iph) * vis_min/visc_cut
                         else

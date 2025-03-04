@@ -7,12 +7,10 @@ subroutine marker2elem
   use phases
   implicit none
 
-  integer :: kph(1), i, j, k, kinc, inc, iseed, icount
+  integer :: i, j, kinc, inc, iseed, icount
   double precision :: x1, x2, y1, y2, xx, yy, r1, r2
   double precision :: kn, xdepth, testu
   integer :: mohod
-  double precision :: critmeltfrac(nz-1,nx-1), tmpr, critmelt, testa
-  integer :: ibug,imagcolumn(nx-1),jmagcolumn(nx-1),jmagtop,magtopcount,imag_min,imag_max, knn
   
   !character*200 msg
 
@@ -91,77 +89,6 @@ do i = 1, nx-1
     if (jmoho(i).le.8) jmoho(i) = 8
 enddo
 
-imagtop = int((nx-1)/2)
-imagcolumn(:) = 0
-jmagcolumn(:) = nz-1
-ibug = 0
-
-critmeltfrac = 0.
-
-! find top magma chambers
-do i = 1, nx-1
-    k = jmoho(i)    
-    do j = k , nz-1
-        tmpr = 0.25*(temp(j,i)+temp(j+1,i)+temp(j,i+1)+temp(j+1,i+1))
-        if (tmpr.ge.1100.) then
-            critmeltfrac(j,i) = Eff_melt(j,i)
-        endif
-    enddo
-enddo
-
-critmelt = maxval(critmeltfrac)
-do i = 1, nx-1
-    k = jmoho(i)
-    do j = k , nz-1
-        if (critmeltfrac(j,i) .ge. critmelt) then
-            jmagcolumn(i) = j
-            imagcolumn(i) = i
-            ibug = ibug + 1
-            cycle
-        endif
-    enddo
-enddo
-
-jmagtop = minval(jmagcolumn)
-print *, imagtop,jmagtop,ibug
-magtopcount = 0
-! find top magma chambers
-if (ibug .gt. 0 ) then
-    do i = 1, nx-1
-        if (jmagcolumn(i) .eq. jmagtop.and.magtopcount.eq.0) then
-            magtopcount = magtopcount + 1
-            imag_min = imagcolumn(i)
-        endif
-        if (jmagcolumn(i) .eq. jmagtop.and. magtopcount .gt. 0) then
-            magtopcount = magtopcount + 1
-            imag_max = imagcolumn(i)
-        endif
-    enddo
-    if (imag_max.eq.0) then
-        imagtop = imag_min
-    else
-        imagtop = int(0.5*(imag_max+imag_min))
-    endif
-    print *, imagtop
-endif
-
-! The bottom of the magma need to be 15 km above the max melt fraction ot We produce too much melt
-!  Find the basement below the extrusives and sediments
-ibasement = 2! first guess below the extrusives
-knn = 0
-do j = 1, nz-1
-    testa = sum(phase_ratio(surface_phases,j,imagtop))
-    if ( testa> 0.5d0 .and. knn == 0) then
-        ibasement = j 
-        knn = knn + 1
-    endif
-enddo
-
-if (ibasement.le.2) then
-    ibasement = 2
-else
-    ibasement = max(2,ibasement)
-endif
 
 !   !$OMP parallel do
 !   !$ACC loop auto
