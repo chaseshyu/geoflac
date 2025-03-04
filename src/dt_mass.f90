@@ -185,7 +185,7 @@ integer :: i, j
 double precision :: dlmin_prop, dlmin, dl, dlm
 dlmin = 1.d+28
 
-!$OMP parallel do private(dl, dlm) reduction(min:dlmin)
+!$OMP parallel do private(i,j,dl,dlm) reduction(min:dlmin)
 !$ACC parallel loop collapse(2) reduction(min:dlmin) async(1)
 do i = 1,nx-1
     do j = 1,nz-1
