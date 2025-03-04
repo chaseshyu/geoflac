@@ -8,8 +8,6 @@ use arrays
 use params
 include 'precision.inc'
 
-double precision :: D(3,3)  ! diffusion operator
-
 tan_mzone = tan(0.5d0 * angle_mzone * 3.14159265358979323846d0 / 180.d0)
 ! max. width of the magma zone @ moho (as if melting occurs at 200 km)
 ihalfwidth_mzone = ceiling(tan_mzone * 200e3 / dxmin)
@@ -37,10 +35,10 @@ if (istress_therm > 0 .or. itype_melting == 1) then
     !$ACC end kernels
 endif
 
-!$OMP Parallel private(i,j,iph,cp_eff,cond_eff,dissip,diff,quad_area, &
-!$OMP                  x1,x2,x3,x4,y1,y2,y3,y4,t1,t2,t3,t4,tmpr,fr_lambda, &
-!$OMP                  delta_fmagma,deltaT,qs,real_area13,area_n,rhs, &
-!$OMP                  jm,area_ratio,z_moho,z_melt,x_melt,h,x,z)
+!!$OMP Parallel private(i,j,ii,jj,iph,cp_eff,dissip,diff,quad_area, &
+!!$OMP                  x1,x2,x3,x4,y1,y2,y3,y4,t1,t2,t3,t4,tmpr,fr_lambda, &
+!!$OMP                  delta_fmagma,deltaT,qs,real_area13,area_n,rhs, &
+!!$OMP                  jm,area_ratio,z_moho,z_melt,x_melt,h,x,z)
 
 if (itype_melting .ge. 1) then
     ! M: fmegma, magma fraction in the element
@@ -64,7 +62,7 @@ if (itype_melting .ge. 1) then
     ! Rearrage to: deltaT = delta_fmagma * latent_heat / cp
     ! This heat is distributed to the 4 corners evenly
     !
-    !$OMP do
+    !$OMP parallel do private(i,j,cp_eff,tmpr,fr_lambda,delta_fmagma,deltaT) collapse(2)
     !$ACC parallel loop collapse(2) async(1)
     do i = 1,nx-1
         do j = 1,nz-1
@@ -94,10 +92,11 @@ if (itype_melting .ge. 1) then
             temp(j+1,i+1) = temp(j+1,i+1) + deltaT
         end do
     enddo
-    !$OMP end do
+    !$OMP end parallel do
 
     if (itype_melting .eq. 1) then
-        !$OMP do
+        !$OMP parallel do private(i,j,jm,quad_area,area_ratio,ii,jj,z_moho,z_melt,x_melt,h,x,z) &
+        !$OMP                  collapse(2)
         !$ACC parallel loop collapse(2) async(1)
         do i = 1,nx-1
             ! XXX: Assume melting cannot happen above the moho. (j > jmoho(i)) is always true
@@ -147,7 +146,7 @@ if (itype_melting .ge. 1) then
 endif
 
 !$ACC parallel loop collapse(2) async(1)
-!$OMP do
+!$OMP parallel do private(i,j,iph,cp_eff,dissip,diff,x1,x2,x3,x4,y1,y2,y3,y4,t1,t2,t3,t4) collapse(2)
 do i = 1,nx-1
     do j = 1,nz-1
 
@@ -155,7 +154,6 @@ do i = 1,nx-1
 
         ! Calculating effective material properties
         cp_eff = Eff_cp( j,i )
-        cond_eff = Eff_conduct( j,i )
 
         ! if shearh-heating flag is true
         if( ishearh.eq.1 .and. itherm.ne.2 ) then
@@ -165,7 +163,7 @@ do i = 1,nx-1
         endif
 
         ! diffusivity
-        diff = cond_eff/den(iph)/cp_eff
+        diff = Eff_conduct( j,i ) / den(iph) / cp_eff
 
         ! Calculate fluxes in two triangles
         x1 = cord (j  ,i  ,1)
@@ -182,17 +180,7 @@ do i = 1,nx-1
         t4 = temp (j+1 ,i+1)
 
         ! Additional sources - radiogenic and shear heating
-        tmpr = 0.25d0*(t1 + t2 + t3 + t4)
-        !dummye(j,i) = ( source(j,i) + dissip/den(iph) - 600.d0*cp_eff*Eff_melt(iph,tmpr)) / cp_eff
-
-        ! Calculate pressure change
-        zpress = -stressI(j,i)  !Lith_Pres(j,i) !Pressure in Pa        
-        zdp = zpress - zpressold(j,i) !Calc delta P in Pa
-        if (abs(zdp).gt.1.e6) zdp =0. ! Check for spurrious P changes
-       ! if( mod(nloop, 10).eq.0 ) then
-        zpressm(j,i) = zpress !Save current P as old in Pa
-       ! endif
-        zpressold(j,i) = zpress
+        zpressm(j,i) = -stressI(j,i)
 
         dummye(j,i) = ( source(j,i) + dissip/den(iph) ) / cp_eff
 
@@ -206,10 +194,10 @@ do i = 1,nx-1
 
     end do
 end do    
-!$OMP end do
+!$OMP end parallel do
 
 !$ACC parallel loop collapse(2) async(1)
-!$OMP do
+!$OMP parallel do private(i,j,rhs,area_n,qs,real_area13) collapse(2)
 do i = 1,nx
     do j = 1,nz
 
@@ -328,11 +316,11 @@ do i = 1,nx
         temp(j,i) = temp(j,i)+rhs*dt/area_n
     end do
 end do
-!$OMP end do
+!$OMP end parallel do
 
 ! Boundary conditions (top and bottom)
 !$ACC parallel loop async(1)
-!$OMP do
+!$OMP parallel do private(i,j,y)
 do i = 1,nx-1
 
     temp(1,i) = t_top
@@ -340,8 +328,7 @@ do i = 1,nx-1
     if( itemp_bc.eq.1 ) then
         temp(nz,i) = bot_bc
     elseif( itemp_bc.eq.2 ) then
-        cond_eff = Eff_conduct( nz-1, min(i,nx-1) )
-        temp(nz,i) = temp(nz-1,i)  +  bot_bc * ( cord(nz-1,i,2)-cord(nz,i,2) ) / cond_eff
+        temp(nz,i) = temp(nz-1,i)  +  bot_bc * ( cord(nz-1,i,2)-cord(nz,i,2) ) / Eff_conduct( nz-1, min(i,nx-1) )
     else if (itemp_bc.eq.3) then
         do j  = 1,nz-1
         ! if(irestart.ne.1) then  
@@ -358,17 +345,16 @@ do i = 1,nx-1
     endif
 
 end do
-!$OMP end do
+!$OMP end parallel do
 
 ! Boundary conditions: dt/dx =0 on left and right  
 !$ACC parallel loop async(1)
-!$OMP do
+!$OMP parallel do private(j)
 do j = 1,nz
     temp(j ,1)  = temp(j,2)
     temp(j, nx) = temp(j,nx-1)
 end do
-!$OMP end do
-!$OMP end parallel
+!$OMP end parallel do
 
 return
 end 

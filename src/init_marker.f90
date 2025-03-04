@@ -77,7 +77,6 @@ do i = 1 , nx-1
         dy = cord(j+1,i,2) - cord(j,i,2)
 
         zpressm(j,i) = -stressI(j,i)
-        zpressold(j,i) = zpressm(j,i)
         
         Eff_melt(j,i) = 0. !Assume no melt
 ! randomize the new coordinates inside the element

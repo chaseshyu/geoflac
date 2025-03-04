@@ -23,7 +23,7 @@ module arrays
       ! magma migration related
       xlab(:),tsol(:,:),tliq(:,:),tliquc(:,:),tsoluc(:,:),tsollc(:,:),tliqlc(:,:), &
       avT(:,:),Eff_melt(:,:), zpressm(:,:),deltaTLH(:,:), &
-      Emeltcounter(:,:),zpresscounter(:,:), xfmelt(:,:), zpressold(:,:), &
+      Emeltcounter(:,:),zpresscounter(:,:), xfmelt(:,:), &
       new_intrusion(:,:), av_intrusion(:,:), stored_intrusion(:,:), dv_intr(:,:)
 
   double precision, allocatable :: se2sr(:,:), sshrheat(:,:)
@@ -111,7 +111,6 @@ contains
     allocate(zpresscounter(nz-1,nx-1))
     allocate(Emeltcounter(nz-1,nx-1))
     allocate(xfmelt(nz-1,nx-1))
-    allocate(zpressold(nz-1,nx-1))
     allocate(new_intrusion(nz-1,nx-1))
     allocate(av_intrusion(nz-1,nx-1))
     allocate(stored_intrusion(nz-1,nx-1))
