@@ -305,8 +305,8 @@ subroutine mor_melting
         stored_intrusion(1,ii) = stored_intrusion(1,ii)+ av_intrusion(1,ii) - control_vol_ch ! in m^2
         total_extru_strain = control_vol_ch/quad_area ! in volumic strain
     else
+        total_extru_strain = (av_intrusion(1,ii) + stored_intrusion(1,ii)) / quad_area
         stored_intrusion(1,ii) = 0.
-        total_extru_strain = av_intrusion(1,ii)/quad_area
     endif
 
     xintr = total_extru_strain
@@ -376,10 +376,10 @@ subroutine mor_melting
             fmagma(jj,ii) = fmagma(jj,ii) + control_vol_ch/quad_area ! in volumic strain
             dv_intr(jj,ii) = dv_intr(jj,ii)+ control_vol_ch ! in m^2
         else
+            new_intrusion(jj,ii) = (av_intrusion(jj,ii) + stored_intrusion(jj,ii)) / quad_area ! in volumic strain
             stored_intrusion(jj,ii) = 0.
-            new_intrusion(jj,ii) = av_intrusion(jj,ii)/quad_area ! in volumic strain
             fmagma(jj,ii) = fmagma(jj,ii) + new_intrusion(jj,ii) ! in volumic strain
-            dv_intr(jj,ii) = dv_intr(jj,ii)+ av_intrusion(jj,ii)*quad_area ! in m^2
+            dv_intr(jj,ii) = dv_intr(jj,ii) + av_intrusion(jj,ii)*quad_area ! in m^2
         endif
     enddo
     xdike_migrated = 0.
