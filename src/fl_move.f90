@@ -268,8 +268,6 @@ subroutine mor_melting
     ratio_crust = 0.0
     ratio_dike = ratio_crust_mzone
     
-    call check_camber
-
     ihalfwidth_mzone = int(width_mzone / 2 / dxmin)
     do i = max(1,ii-2*ihalfwidth_mzone), min(nx-1,ii+2*ihalfwidth_mzone)
         do j = 1, nz-1
