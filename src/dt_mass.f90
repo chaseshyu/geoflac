@@ -95,7 +95,6 @@ do iblk = 1, 2
                 rho_inert = pwave/(vel_sound*vel_sound)
                 if (i_rey.eq.1.and.vel_max.gt.vbc) then
                     rho_inert2 = (xReyn*v_min)/(vel_max*abs(rzbo))
-        !           write(*,*) rho_inert, rho_inert2,vel_max
                     if (rho_inert.gt.rho_inert2) then
                         rho_inert = rho_inert2
                         vel_sound_tmp = sqrt(pwave/rho_inert2)
@@ -153,7 +152,7 @@ do iblk = 1, 2
                             rmu = rm(iph)
                         endif
                         dt_m =vis_min/rmu * fracm
-                        dt_maxwell = min (dt_m,dt_maxwell)
+                        dt_maxwell = min(dt_m,dt_maxwell)
                     endif
                 endif
 
@@ -165,6 +164,7 @@ enddo
 
 !$ACC update self(dt_elastic, dt_maxwell) async(1)
 dt = min(min(dt_elastic, dt_maxwell), dtmax_therm)
+if (itype_melting.eq.2) dt = dt * 10.
 !$ACC update device(dt) async(1)
 
 return
