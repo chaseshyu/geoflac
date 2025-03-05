@@ -347,7 +347,7 @@ subroutine mor_melting
             n_to_add = min(ceiling((xl_vol / xel_vol)* kinc), max_markers_per_elem - kinc)
             vol_ratio = min(xl_vol / xel_vol, 1.0d0)
             do kk = 1, n_to_add
-                call add_marker_dike(1,i, 0.11d0, time, nloop+i+kk, kocean2)
+                call add_marker_at_top(i, 0.11d0, time, nloop+i+kk, kocean2)
             enddo
             dv_intr(1,i) = 0.
             ichanged = 1
@@ -407,7 +407,7 @@ subroutine mor_melting
             n_to_add = min(ceiling((xl_vol / xel_vol) * kinc), max_markers_per_elem - kinc)
             vol_ratio = min(xl_vol / xel_vol, 1.0d0)
             do kk = 1, n_to_add
-                call add_marker_dike(jj,ii, 0.11d0, time, nloop+ii+kk, kmafic)
+                call add_marker_dike(jj,ii, 1d0, time, nloop+ii+kk, kmafic)
             enddo
             dv_intr(jj,ii) = 0.
             ichanged = 1
