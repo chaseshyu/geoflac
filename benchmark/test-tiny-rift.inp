@@ -227,7 +227,7 @@ phasedat.inp   ; file with distribution of phase on the 2D grid (phasedat)
 ; Inertial Mass Scaling (idt_scale):
 2         0-no scale for DYNAMICS,1-scale for STATICS, 2-Automatic scaling
 1,7.e-4  dt_scale (used if scale =1), tolerance=Vbc/Vsound (if scale=2)
-1,0.1   Buoyancy + Reynolds (no-0,yes-1), Reynolds number
+1,5   Buoyancy + Reynolds (no-0,yes-1), Reynolds number
 1        frequency of re-evaluation of real masses
 1       frequency of re-evaluation of inertial masses
 1       Freq. re-evaluation Non-Newtonian VISC (rheol.eq.12)
@@ -243,13 +243,13 @@ phasedat.inp   ; file with distribution of phase on the 2D grid (phasedat)
 ; Time parameters below are in thousands years
 ;
 ; Max time of calculations (in Kyr)
-0.010   ; change to 10000 to see subduction
+0.72   ; change to 10000 to see subduction
 ;
 ; Time interval for screen output of calc. progress (in Kyr)
-0.002
+0.01
 ;
 ; Time interval for file output (in Kyr)
-0.002
+0.01
 ;
 ; Variables to print
 ; vel srII eII aps sII sxx szz sxz pres temp melt visc phas mark src diss forc hfl topo
@@ -259,7 +259,7 @@ phasedat.inp   ; file with distribution of phase on the 2D grid (phasedat)
 0
 ;
 ; Time interval for process saving
-2 - nsave (frequency of saving)
+0.05 - nsave (frequency of saving)
 ;
 ; saving the last step only (1) or each nsave step (0)
 1

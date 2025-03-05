@@ -211,7 +211,7 @@ phasedat.inp   ; file with distribution of phase on the 2D grid (phasedat)
 ;                       R e m e s h i n g
 ;=================================================================
 ;ny_rem (0,1), mode_rem(1, 3 or 11),  ntest_rem,  angle_rem(degrees,when magmainj le 10)
-1            3               500         10.
+1            3               100         10.
 ;
 ; dx_rem (if mode_rem=11 defines critical shortening for remeshing in dx-units)
 1.
@@ -226,7 +226,7 @@ phasedat.inp   ; file with distribution of phase on the 2D grid (phasedat)
 ; Inertial Mass Scaling (idt_scale):
 2         0-no scale for DYNAMICS,1-scale for STATICS, 2-Automatic scaling
 1,7.e-4  dt_scale (used if scale =1), tolerance=Vbc/Vsound (if scale=2)
-1,0.1   Buoyancy + Reynolds (no-0,yes-1), Reynolds number
+1,5   Buoyancy + Reynolds (no-0,yes-1), Reynolds number
 1        frequency of re-evaluation of real masses
 1       frequency of re-evaluation of inertial masses
 1       Freq. re-evaluation Non-Newtonian VISC (rheol.eq.12)
@@ -242,7 +242,7 @@ phasedat.inp   ; file with distribution of phase on the 2D grid (phasedat)
 ; Time parameters below are in thousands years
 ;
 ; Max time of calculations (in Kyr)
-40001   ; change to 10000 to see subduction
+10001   ; change to 10000 to see subduction
 ;
 ; Time interval for screen output of calc. progress (in Kyr)
 10
