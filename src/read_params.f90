@@ -261,15 +261,15 @@ if (itype_melting .eq. 1) then
     line = line + 1
     call AdvanceToNextInputLine(4, line)
     read(4,*,err=1000) angle_mzone, fmagma_max, ratio_mantle_mzone
-    line = line + 1
-    call AdvanceToNextInputLine(4, line)
-    read(4,*,err=1000) latent_heat_magma, lambda_freeze, lambda_freeze_tdep
 elseif (itype_melting .eq. 2) then
     read(4,*,err=1000)nelem_serp, prod_magma
     line = line + 1
     call AdvanceToNextInputLine( 4,line)
     read(4,*,err=1000) width_mzone, fmagma_max, ratio_crust_mzone, ratio_mantle_mzone
 end if
+line = line + 1
+call AdvanceToNextInputLine(4, line)
+read(4,*,err=1000) latent_heat_magma, lambda_freeze, lambda_freeze_tdep
 line = line + 1
 call AdvanceToNextInputLine(4, line)
 read(4,*,err=1000) weaken_ratio_plastic, weaken_ratio_viscous
