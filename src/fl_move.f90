@@ -291,8 +291,9 @@ subroutine mor_melting
     ! We need to let the melt spread across the basin (we have to be symmetric)
     ! we impose a max of 2 particles per element for the volume change
     ! We use the same width has where the melt is collected
-    extru_limit = 500.*2.*vbc*dlmin
     intru_limit = 1.*2.*vbc*dlmin
+    ! intru_limit = 2.*vbc*(cord(ibasement,ii,2)-cord(jmoho(ii),ii,2))
+    extru_limit = intru_limit/4.
     
     ! REVISE  Need to be able to inject in more elements laterally
     ! Volcanic flow rate ? From sesismic 1e-6 m^2/s  500 km^2/4 myr
