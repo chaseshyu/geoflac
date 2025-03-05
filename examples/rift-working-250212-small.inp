@@ -218,7 +218,7 @@ phasedat.inp   ; file with distribution of phase on the 2D grid (phasedat)
 ;
 ; Diffusion of topography(1) and amplification factor for high elevation
 ; topo_removal_rate     fac_kappa
-1.e-5	                     0.
+1.e-6	                     0.
 ;
 ;=================================================================
 ;                   P r o c e s s   c o n t r o l
@@ -245,10 +245,10 @@ phasedat.inp   ; file with distribution of phase on the 2D grid (phasedat)
 4001   ; change to 10000 to see subduction
 ;
 ; Time interval for screen output of calc. progress (in Kyr)
-10
+1
 ;
 ; Time interval for file output (in Kyr)
-20
+2
 ;
 ; Variables to print
 ; vel srII eII aps sII sxx szz sxz pres temp melt visc phas mark src diss forc hfl topo

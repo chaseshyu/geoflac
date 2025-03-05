@@ -218,7 +218,7 @@ phasedat.inp   ; file with distribution of phase on the 2D grid (phasedat)
 ;
 ; Diffusion of topography(1) and amplification factor for high elevation
 ; topo_removal_rate     fac_kappa
-1.e-5	                     0.
+1.e-6	                     0.
 ;
 ;=================================================================
 ;                   P r o c e s s   c o n t r o l
