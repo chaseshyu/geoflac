@@ -118,6 +118,11 @@ endif
 ! Interpolate accumulated melt for melt_prod
 call rem_interpolate( nzt, nxt, dummye, Eff_melt )
 
+! Interpolate stored melt
+call rem_interpolate( nzt, nxt, dummye, stored_intrusion )
+
+! Interpolate accumulated extrusion and intrusion volume changes
+call rem_interpolate( nzt, nxt, dummye, dv_intr )
 
 !$OMP parallel do
 !$ACC parallel loop collapse(2) async(1)
