@@ -243,92 +243,102 @@ subroutine mor_melting
     use phases
     use marker_data
     implicit none
+
     double precision, external :: dlmin_prop
-    double precision :: totalmelt, quad_area
-    double precision :: max_mig, totalarea, totalmeltfract, totalmeltacc
-    double precision :: extrusion_rate, ratio_crust, ratio_dike, pi, dlmin
-    double precision :: control_vol_ch, vc_rate
-    double precision :: xintr, xmu, xsigma, xmelt_migrated, xel_vol, xl_vol
-    double precision :: vol_ratio, xdike_migrated
-    integer :: i, j, ii, jj, kinc, n_to_add, kk, ichanged, ihalfwidth_mzone
-    double precision :: extru_limit, intru_limit, total_extru_strain
+    double precision :: totalmelt, totalarea
+    double precision :: mor_extrusion_rate, mor_dike_rate, pi, dlmin
+    double precision :: control_vol_ch, vc_rate, xintr, xmu, xsigma
+    double precision :: unit_xmelt_migrated, xl_vol, quad_area, xdike_migrated
+    double precision :: extru_limit, intru_limit, total_extru_strain, tmp, extru_melt
+    integer :: i, j, ii, jj, kinc, n_to_add, kk, ihalfwidth_mzone
+    integer :: iextru_start, iextru_end, nintru, iintru_bot
       
     dlmin = dlmin_prop()
     
-    max_mig = 70
     av_intrusion = 0.
     new_intrusion = 0.
     ii = imagtop
     totalmelt = 0.
     totalarea = 0.
-    totalmeltfract = 0.
-    totalmeltacc = 0.
-    
-    extrusion_rate = 1.d0 - ratio_crust_mzone - ratio_mantle_mzone
-    ratio_crust = 0.0
-    ratio_dike = ratio_crust_mzone
+
+    mor_extrusion_rate = 1.d0 - ratio_crust_mzone - ratio_mantle_mzone
+    mor_dike_rate = ratio_crust_mzone
+
+    iintru_bot = jmoho(ii) - 5
+    nintru = iintru_bot - ibasement + 1
     
     ihalfwidth_mzone = int(width_mzone / 2 / dxmin)
-    do i = max(1,ii-2*ihalfwidth_mzone), min(nx-1,ii+2*ihalfwidth_mzone)
+    iextru_start = max(1,ii-2*ihalfwidth_mzone)
+    iextru_end = min(nx-1,ii+2*ihalfwidth_mzone)
+
+    !$OMP parallel do private(i,j) collapse(2)
+    do i = 1, nx-1
         do j = 1, nz-1
-            quad_area = 0.5d0/area(j,i,1) + 0.5d0/area(j,i,2)
-            ! volume of the melt in this column
-            if (fmelt(j,i) > 0..and.Eff_melt(j,i)>0.03) then  ! only the melt produced that can move
-                totalmelt = totalmelt + quad_area * fmelt(j,i)
-                totalmeltfract = totalmeltfract + fmelt(j,i)
-            endif
+            dummye(j,i) = 0.5d0/area(j,i,1) + 0.5d0/area(j,i,2)
+        enddo
+    enddo
+
+    ! volume of the melt in this column
+    !$OMP parallel do private(i,j,quad_area) reduction(+:totalmelt,totalarea) collapse(2)
+    do i = iextru_start, iextru_end
+        do j = 1, nz-1
             if (Eff_melt(j,i).gt.0.0) then ! only the melt accumulated
+                quad_area = dummye(j,i)
                 totalarea = totalarea + quad_area
-                totalmeltacc = totalmeltacc + Eff_melt(j,i)
+                if (fmelt(j,i).gt.0. .and. Eff_melt(j,i).gt.0.03) then  ! only the melt produced that can move
+                    totalmelt = totalmelt + quad_area * fmelt(j,i)
+                endif
             endif
         enddo
     enddo
     
     pi = sqrt(2.*3.14159265358979323846)
     
-    
     ! calculate the volume change and magma for extrusives
     ! We need to let the melt spread across the basin (we have to be symmetric)
     ! we impose a max of 2 particles per element for the volume change
     ! We use the same width has where the melt is collected
-    intru_limit = 1.*2.*vbc*dlmin
-    ! intru_limit = 2.*vbc*(cord(ibasement,ii,2)-cord(jmoho(ii),ii,2))
-    extru_limit = intru_limit/4.
+
+    intru_limit = 1.*2.*vbc*dlmin ! per element
+
+    extru_limit = intru_limit * nintru / 4. ! 1/4 of the total volume of intrusion
     
     ! REVISE  Need to be able to inject in more elements laterally
     ! Volcanic flow rate ? From sesismic 1e-6 m^2/s  500 km^2/4 myr
-    av_intrusion(1,ii) = extrusion_rate*totalmelt !stored_intrusion(1,ii) + xintr  ! in m^2
-    vc_rate = (av_intrusion(1,ii)+stored_intrusion(1,ii))/dt ! in m^2/s the full rate of extension rate
+    extru_melt = mor_extrusion_rate * totalmelt  ! in m^2
+    vc_rate = (extru_melt + stored_intrusion(1,ii)) / dt ! in m^2/s the full rate of extension rate
     control_vol_ch = extru_limit * dt  ! in m^2
-    quad_area = 0.5d0/area(1,ii,1) + 0.5d0/area(1,ii,2)
+    quad_area = dummye(1,ii)
     
     if (vc_rate.gt.extru_limit) then
-        stored_intrusion(1,ii) = stored_intrusion(1,ii)+ av_intrusion(1,ii) - control_vol_ch ! in m^2
-        total_extru_strain = control_vol_ch/quad_area ! in volumic strain
+        stored_intrusion(1,ii) = stored_intrusion(1,ii) + extru_melt - control_vol_ch ! in m^2
+        total_extru_strain = control_vol_ch / quad_area ! in volumic strain
     else
-        total_extru_strain = (av_intrusion(1,ii) + stored_intrusion(1,ii)) / quad_area
+        total_extru_strain = (extru_melt + stored_intrusion(1,ii)) / quad_area
         stored_intrusion(1,ii) = 0.
     endif
 
     xintr = total_extru_strain
-    do i = max(1,ii-2*ihalfwidth_mzone), min(nx-1,ii+2*ihalfwidth_mzone)
-        ! Distribute average intrusion on a normal distribution
+    xsigma = dfloat(ihalfwidth_mzone/2)
+    !$OMP parallel do private(i,xmu,tmp)
+    ! Distribute average intrusion on a normal distribution
+    do i = iextru_start, iextru_end
         xmu = dfloat(ii - i)
-        xsigma = dfloat(ihalfwidth_mzone/2)
-        quad_area = 0.5d0/area(1,i,1) + 0.5d0/area(1,i,2)
-        new_intrusion(1,i) = (xintr/pi/xsigma)*dexp(-(xmu)**2./2./xsigma**2.) ! av_intrusion(1,i)
+        tmp = (xintr/pi/xsigma) * dexp(-(xmu)**2./2./xsigma**2.)
+        new_intrusion(1,i) = tmp
+        av_intrusion(1,i) = tmp
         fmagma(1,i) = fmagma(1,i) + new_intrusion(1,i)
-        dv_intr(1,i) = dv_intr(1,i)+ new_intrusion(1,i)*quad_area
+        dv_intr(1,i) = dv_intr(1,i)+ new_intrusion(1,i) * dummye(1,i)
     enddo
     
-    ! Amount of melt removed the mantle per asthenosphere element
-    xmelt_migrated = xintr 
+    ! Ratio of amount of melt removed the mantle per asthenosphere element
+    unit_xmelt_migrated = total_extru_strain / totalarea
     ! Remove this melt on average from the asthenosphere
+    !$OMP parallel do private(i,j) collapse(2)
     do j = 1,nz-1
         do i = 1,nx-1
-            quad_area = 0.5d0/area(j,i,1) + 0.5d0/area(j,i,2)
             if (Eff_melt(j,i).ge.0.03) then
-                Eff_melt(j,i) = Eff_melt(j,i) - xmelt_migrated*quad_area/totalarea
+                Eff_melt(j,i) = Eff_melt(j,i) - unit_xmelt_migrated * dummye(j,i)
             endif
         enddo
     enddo
@@ -337,24 +347,19 @@ subroutine mor_melting
     ! We need to let the melt spread across the basin (we have to be symmetric)
     ! we impose a max of 2 particles per element for the volume change
     ! We use the same width has where the melt is collected
-    do i = max(1,ii-2*ihalfwidth_mzone), min(nx-1,ii+2*ihalfwidth_mzone)
-        ichanged = 0
-        xel_vol = 0.5d0/area(1,i,1) + 0.5d0/area(1,i,2)
-    
+    !$OMP parallel do private(i,kinc,xl_vol,quad_area,n_to_add,kk)
+    do i = iextru_start, iextru_end
         kinc = nmark_elem(1,i)
         xl_vol = dv_intr(1,i)
-        if (xl_vol * kinc >= xel_vol .and. kinc .ne. max_markers_per_elem) then
-        ! intrusion, add a mafic marker
-            n_to_add = min(ceiling((xl_vol / xel_vol)* kinc), max_markers_per_elem - kinc)
-            vol_ratio = min(xl_vol / xel_vol, 1.0d0)
+        quad_area = dummye(1,i)
+        if (xl_vol * kinc >= quad_area .and. kinc .ne. max_markers_per_elem) then
+            ! intrusion, add a mafic marker
+            n_to_add = min(ceiling((xl_vol / quad_area)* kinc), max_markers_per_elem - kinc)
             do kk = 1, n_to_add
                 call add_marker_at_top(i, 0.11d0, time, nloop+i+kk, kocean2)
             enddo
             dv_intr(1,i) = 0.
-            ichanged = 1
-        endif
-    
-        if (ichanged == 1) then
+
             ! recalculate phase ratio
             call count_phase_ratio(1,i)
         endif
@@ -364,61 +369,62 @@ subroutine mor_melting
     ! calculate the volume change for each dike elements
     ! The dike does not get in the extrusives
     
-    xintr = ratio_dike * totalmelt / (jmoho(ii)-ibasement)
+    xintr = mor_dike_rate * totalmelt / nintru
+    control_vol_ch = intru_limit * dt  ! in m^2
     
-    do jj = ibasement,jmoho(ii)-5
-        quad_area = 0.5d0/area(jj,ii,1) + 0.5d0/area(jj,ii,2)
+    !$OMP parallel do private(jj,quad_area,vc_rate)
+    do jj = ibasement, iintru_bot
+        quad_area = dummye(jj,ii)
         av_intrusion(jj,ii) = xintr ! in m^2
-        vc_rate = (av_intrusion(jj,ii)+stored_intrusion(jj,ii))/dt ! in m^2/s
-        control_vol_ch = intru_limit * dt  ! in m^2
+        vc_rate = (av_intrusion(jj,ii) + stored_intrusion(jj,ii)) / dt ! in m^2/s
         if (vc_rate.gt.intru_limit) then  ! in m^2/s
             stored_intrusion(jj,ii) = stored_intrusion(jj,ii) + av_intrusion(jj,ii) - control_vol_ch  ! in m^2
-            new_intrusion(jj,ii) = control_vol_ch/quad_area ! in volumic strain
-            fmagma(jj,ii) = fmagma(jj,ii) + control_vol_ch/quad_area ! in volumic strain
+            new_intrusion(jj,ii) = control_vol_ch / quad_area ! in volumic strain
+            fmagma(jj,ii) = fmagma(jj,ii) + control_vol_ch / quad_area ! in volumic strain
             dv_intr(jj,ii) = dv_intr(jj,ii)+ control_vol_ch ! in m^2
         else
             new_intrusion(jj,ii) = (av_intrusion(jj,ii) + stored_intrusion(jj,ii)) / quad_area ! in volumic strain
             stored_intrusion(jj,ii) = 0.
             fmagma(jj,ii) = fmagma(jj,ii) + new_intrusion(jj,ii) ! in volumic strain
-            dv_intr(jj,ii) = dv_intr(jj,ii) + av_intrusion(jj,ii)*quad_area ! in m^2
+            dv_intr(jj,ii) = dv_intr(jj,ii) + av_intrusion(jj,ii) * quad_area ! in m^2
         endif
     enddo
+
     xdike_migrated = 0.
-        ! Calculate the amount of melt intruded
-    do jj = ibasement,jmoho(ii)-5
+    ! Calculate the amount of melt intruded
+    !$OMP parallel do private(jj) reduction(+:xdike_migrated)
+    do jj = ibasement, iintru_bot
         xdike_migrated = xdike_migrated + new_intrusion(jj,ii)
     enddo
+
+    !$OMP parallel do private(i,j) collapse(2)
     do j = 1,nz-1
         do i = 1,nx-1
-            quad_area = 0.5d0/area(j,i,1) + 0.5d0/area(j,i,2)
             if (Eff_melt(j,i).ge.0.03) then
-                Eff_melt(j,i) = Eff_melt(j,i) - xdike_migrated*quad_area/totalarea
+                Eff_melt(j,i) = Eff_melt(j,i) - xdike_migrated * dummye(j,i) / totalarea
             endif
         enddo
     enddo
     
     ! add basalt in intruded element
-    do jj = ibasement,jmoho(ii)-5
-        ichanged = 0
-        kinc = nmark_elem(jj,ii)
-        xl_vol = dv_intr(jj,ii)
-        xel_vol = 0.5d0/area(jj,ii,1) + 0.5d0/area(jj,ii,2)
-        if (xl_vol * kinc >= xel_vol .and. kinc .ne. max_markers_per_elem) then
-            ! intrusion, add a mafic marker
-            n_to_add = min(ceiling((xl_vol / xel_vol) * kinc), max_markers_per_elem - kinc)
-            vol_ratio = min(xl_vol / xel_vol, 1.0d0)
-            do kk = 1, n_to_add
-                call add_marker_dike(jj,ii, 1d0, time, nloop+ii+kk, kmafic)
-            enddo
-            dv_intr(jj,ii) = 0.
-            ichanged = 1
-        endif
-        
-        
-        if (ichanged == 1) then
-            ! recalculate phase ratio
-            call count_phase_ratio(jj,ii)
-        endif
+    !$OMP parallel do private(i,jj,kinc,xl_vol,quad_area,n_to_add,kk) collapse(2)
+    do i = ii-3, ii+3
+        do jj = ibasement, iintru_bot
+            kinc = nmark_elem(jj,i)
+            xl_vol = dv_intr(jj,i)
+            quad_area = dummye(jj,i)
+            if (xl_vol * kinc >= quad_area .and. kinc .ne. max_markers_per_elem) then
+                ! intrusion, add a mafic marker
+                n_to_add = min(ceiling((xl_vol / quad_area) * kinc), max_markers_per_elem - kinc)
+                do kk = 1, n_to_add
+                    call add_marker_dike(jj,i, 1d0, time, nloop+i+kk, kmafic)
+                enddo
+                dv_intr(jj,i) = 0.
+
+                ! recalculate phase ratio
+                call count_phase_ratio(jj,i)
+            endif
+        enddo
     enddo
     
     return
