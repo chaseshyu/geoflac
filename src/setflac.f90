@@ -18,6 +18,7 @@ shrheat = 0
 sshrheat = 0
 dtopo = 0.
 extrusion = 0.
+xfmelt = 0.
 fmelt = 0.
 fmagma = 0.
 e2sr = 1d-16
