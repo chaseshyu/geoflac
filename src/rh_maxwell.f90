@@ -23,11 +23,11 @@ end if
 ! Undimensional parametr:  dt / relaxation time
 temp = rmu/(2*viscosity) * dt 
 
-if ( temp .gt. 0.5d0 ) then
-    write( msgstr, '(A,A,e8.1,A,e7.1,A,e7.1)' ) 'Maxwell: time step!',' visc=',viscosity,' m0=',rmu0,' m=',rmu
-    ! call SysMsg(msgstr)
-    ! stop 22
-endif 
+! if ( temp .gt. 0.5d0 ) then
+!     write( msgstr, '(A,A,e8.1,A,e7.1,A,e7.1)' ) 'Maxwell: time step!',' visc=',viscosity,' m0=',rmu0,' m=',rmu
+!     call SysMsg(msgstr)
+!     stop 22
+! endif 
      
 vic1 = 1 - temp 
 vic2 = 1.0d0/(1.0d0 + temp)
