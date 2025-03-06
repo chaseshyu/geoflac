@@ -169,9 +169,9 @@ phasedat.inp   ; file with distribution of phase on the 2D grid (phasedat)
 ; Fixed low viscosity zone
 ; 100- rectangular, viscosity=vis_min, for mid-ocean-ridge at sides
 ;
-1  - inhom(number of inhomogenities)
+0  - inhom(number of inhomogenities)
 ; ix1   ix2   iy1   iy2   phase   geometry    init.pl.strain
-  150  176   1     20     2       4          3.
+;  150  176   1     20     2       4          3.
 ;   40   50   3      8    -1      11          1.
 ;
 ; Tension cut off
@@ -199,7 +199,7 @@ phasedat.inp   ; file with distribution of phase on the 2D grid (phasedat)
 ; If itype_melting == 2
 ; nelem_serp, prod_magma
 2,     4e-13
-; width_mzone, chamber_max, ratio_crust_mzone, ratio_mantle_mzone
+; width_mzone, fmagma_max, ratio_crust_mzone, ratio_mantle_mzone
 100.e3,          0.3,         0.8,              0.
 ;
 ; latent_heat_magma, lambda_freeze, lambda_freeze_tdep
@@ -242,7 +242,7 @@ phasedat.inp   ; file with distribution of phase on the 2D grid (phasedat)
 ; Time parameters below are in thousands years
 ;
 ; Max time of calculations (in Kyr)
-0.72   ; change to 10000 to see subduction
+0.17   ; change to 10000 to see subduction
 ;
 ; Time interval for screen output of calc. progress (in Kyr)
 0.01
@@ -258,7 +258,7 @@ phasedat.inp   ; file with distribution of phase on the 2D grid (phasedat)
 0
 ;
 ; Time interval for process saving
-0.05 - nsave (frequency of saving)
+0.1 - nsave (frequency of saving)
 ;
 ; saving the last step only (1) or each nsave step (0)
 1
