@@ -164,7 +164,7 @@ enddo
 
 !$ACC update self(dt_elastic, dt_maxwell) async(1)
 dt = min(min(dt_elastic, dt_maxwell), dtmax_therm)
-if (itype_melting.eq.2) dt = dt * 2.
+if (itype_melting.eq.2) dt = dt * 10.
 !$ACC update device(dt) async(1)
 
 return
