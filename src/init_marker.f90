@@ -13,9 +13,8 @@ integer :: i, j, i1, i2, inc, k, k1, k2, kph, m, n, l, iseed
 double precision :: ddx, ddy, dx, dy, r, rx, ry, xx, &
                     yy, yyy, hhc(maxzone_layer)
 
-Emeltcounter(:,:) = 0.
-zpresscounter(:,:) = 0.
-                    
+Emeltcounter = 0.
+zpresscounter = 0.       
 mark_id_elem = 0
 nmark_elem = 0
 
@@ -124,7 +123,6 @@ do i = 1 , nx-1
                 kph = iph_col(n,m)
             enddo
             call add_marker(xx, yy, kph,zpressm(j,i),0.d0, 0.d0, j, i, inc)
-            !call add_marker(xx, yy, iphase(j,i), 0.d0, j, i, inc)
             if(inc.le.0) cycle
 
             l = l + 1

@@ -572,8 +572,6 @@ return
 end subroutine diff_topo
 
 
-
-
 subroutine resurface
 !$ACC routine(bar2xy) seq
 !$ACC routine(shape_functions) seq
@@ -731,18 +729,9 @@ do i = 1, nx-1
 end do
 
 ! recalculate the phase ratio
-!$OMP parallel do private(i,j,k,n)
+!$OMP parallel do private(i)
 do i = 1, nx-1
-    do j = 1, nz-1
-        do k = 1, nmark_elem(j,i)
-            n = mark_id_elem(k,j,i)
-            if (n .eq. 0) then
-                print*, i, j, k, nmark_elem(j,i)
-            end if
-        end do
-    end do
-
-    if (ichanged(i) == 1) call count_phase_ratio(1,i)
+    if (ichanged(i) .eq. 1) call count_phase_ratio(1,i)
 end do
 
 return
@@ -792,6 +781,7 @@ end do
 
 return
 end subroutine add_marker_at_top
+
 
 subroutine add_marker_dike(j,i, vol_ratio, time, loop, kph)
 !$ACC routine seq

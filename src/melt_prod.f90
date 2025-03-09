@@ -139,10 +139,6 @@ do j = jblk,nz-1-34,2
                 end if
             end if
         end if
-        
-        ! Save new pressure and temp as old
-        ! avTo(j,i) = avT(j,i)
-            
     end do
 end do
 !$OMP end parallel do

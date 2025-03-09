@@ -349,6 +349,7 @@ else
     stop 1
 endif
 
+return
 end subroutine init_geotherm_profile
 
 

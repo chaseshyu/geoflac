@@ -16,10 +16,8 @@ double precision :: depl(4)
 double precision :: s11p(4),s22p(4),s12p(4),s33p(4),s11v(4),s22v(4),s12v(4),s33v(4)
 double precision :: bulkm,rmu,coh,phi,psi, &
                     stherm,hardn,vis, &
-                    de11,de22,de12,de33,dv,dv1p, &
-                    diss, poiss, &
-                    quad_area, s0, s0a,s0b, &
-                    sII_plas, sII_visc, young
+                    de11,de22,de12,de33,dv,dv1p,diss, &
+                    quad_area, s0, s0a,s0b,sII_plas,sII_visc
 double precision :: Eff_visc
 integer :: i, j, k, iph, irh, &
            ipls

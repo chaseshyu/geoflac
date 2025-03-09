@@ -12,7 +12,7 @@ real*8, parameter :: c1d3 = 1.d0/3.d0
 real*8, parameter :: visc_cut = 1.d+17
 
 real*8 rmu, temp, vic1, vic2, dev, de11d, de22d, de33d, s0, s11d, s22d, s33d
-character*200 msgstr
+! character*200 msgstr
 
 if( viscosity .lt. visc_cut ) then
     rmu = rmu0 * viscosity/visc_cut

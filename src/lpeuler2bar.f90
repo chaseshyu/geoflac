@@ -6,8 +6,6 @@ use params
 
 include 'precision.inc'
 
-character*200 msg
-
 !$ACC kernels async(1)
 mark_id_elem(:,:,:) = 0
 nmark_elem(:,:) = 0
@@ -62,5 +60,4 @@ enddo
 !$OMP end parallel do
 
 return
-
 end subroutine lpeuler2bar

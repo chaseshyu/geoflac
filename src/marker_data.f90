@@ -24,6 +24,7 @@ MODULE marker_data
     implicit none
 
     integer, intent(in) :: nz, nx
+
     max_markers = nz * nx * max_markers_per_elem
     !$ACC update device(max_markers) async(1)
 
@@ -40,8 +41,10 @@ MODULE marker_data
     allocate(mark_id_elem(max_markers_per_elem, nz-1, nx-1))
     allocate(nmark_elem(nz-1, nx-1))
 
+    return
   end subroutine
 
+  
   subroutine add_marker(x, y, iph, xxpres, xxmelt, age, j, i, inc)
     !$ACC routine seq
     !$ACC routine(check_inside) seq
@@ -54,11 +57,11 @@ MODULE marker_data
     use arrays
     use params
     implicit none
+
     integer :: iph, j, i, inc
     double precision :: x, y, age, xxpres, xxmelt
     integer :: ntr, kk, nm
     double precision :: bar1, bar2
-    !character*200 msg
 
     call check_inside(x , y, bar1, bar2, ntr, i, j, inc)
     if(inc.eq.0) return
@@ -108,6 +111,8 @@ MODULE marker_data
     mark_phase(kk) = iph
     mark_zpressn(kk) = xxpres
     mark_Emeltm(kk) = xxmelt
+
+    return
   end subroutine add_marker
 
 
@@ -149,7 +154,7 @@ MODULE marker_data
     use arrays
 
     integer, intent(in) :: j, i
-    integer :: n, kk, ncounters(maxph), iph, kph, nm
+    integer :: n, kk, ncounters(maxph), iph, nm
 
     if (nmark_elem(j,i) == 0) stop 'No markers in element'
 
@@ -165,7 +170,6 @@ MODULE marker_data
     enddo
 
     ! the phase of this element is the most abundant marker phase
-    !kph = maxloc(ncounters)
     iph = 1
     nm = 0
     do kk = 1, nphase
@@ -175,6 +179,8 @@ MODULE marker_data
        end if
     end do
     iphase(j,i) = iph
+
+    return
   end subroutine count_phase_ratio
 
 END MODULE marker_data
