@@ -276,7 +276,7 @@ do iph = 1, nphase
         h = (cohesion2(iph) - cohesion1(iph)) / (plstrain2(iph) - plstrain1(iph))
         if(iph.eq.kcont1 .or. iph.eq.kmant1) then
             if(i.le.140.or.i.ge.360) f=fric1(iph)  !+ (35. - fric1(iph)) * dpl
-         endif 
+        endif 
      else
         ! saturated weakening
         f = fric2(iph)
@@ -300,10 +300,10 @@ enddo
 phi = 1 / phi
 coh = 1 / coh
 
-! if (itype_melting == 1) then
-!     phi = phi * (1 - (1 - weaken_ratio_plastic) * fmagma(j,i) / fmagma_max)
-!     coh = coh * (1 - (1 - weaken_ratio_plastic) * fmagma(j,i) / fmagma_max)
-! endif
+if (itype_melting .ge. 1) then
+    phi = phi * (1 - (1 - weaken_ratio_plastic) * fmagma(j,i) / fmagma_max)
+    coh = coh * (1 - (1 - weaken_ratio_plastic) * fmagma(j,i) / fmagma_max)
+endif
 
 return
 end subroutine pre_plast
