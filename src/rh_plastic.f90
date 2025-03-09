@@ -246,6 +246,7 @@ subroutine pre_plast (i,j,coh,phi,psi,hardn)
 !$ACC routine seq
 use arrays
 use params
+use phases
 include 'precision.inc'
 
 pls_curr = aps(j,i)
@@ -273,7 +274,7 @@ do iph = 1, nphase
         d = dilat1(iph) + (dilat2(iph) - dilat1(iph)) * dpl
         c = cohesion1(iph) + (cohesion2(iph) - cohesion1(iph)) * dpl
         h = (cohesion2(iph) - cohesion1(iph)) / (plstrain2(iph) - plstrain1(iph))
-        if(iph.eq.2.or.iph.eq.4) then
+        if(iph.eq.kcont1 .or. iph.eq.kmant1) then
             if(i.le.140.or.i.ge.360) f=fric1(iph)  !+ (35. - fric1(iph)) * dpl
          endif 
      else
@@ -282,7 +283,7 @@ do iph = 1, nphase
         c = cohesion2(iph)
         d = dilat2(iph)
         h = 0
-        if(iph.eq.2.or.iph.eq.4) then
+        if(iph.eq.kcont1 .or. iph.eq.kmant1) then
             if(i.le.140.or.i.ge.360) f=fric1(iph)  !+ (35. - fric1(iph)) * dpl
          endif 
      endif
