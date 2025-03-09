@@ -52,9 +52,12 @@ do n = 1 , nmarkers
     !$ACC end atomic
     !$OMP end atomic
     mark_id_elem(kk, j, i) = n
+    !$ACC atomic update
+    !$OMP atomic update
     zpresscounter(j,i) = zpresscounter(j,i) + mark_zpressn(n)
+    !$ACC atomic update
+    !$OMP atomic update
     Emeltcounter(j,i) = Emeltcounter(j,i) + mark_Emeltm(n)
-
 enddo
 !$OMP end parallel do
 

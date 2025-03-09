@@ -51,7 +51,7 @@ dt_maxwell = 1.d+28
 
 visc_cut = 1.d+17
 vel_max = 0.d0
-!$OMP parallel do private(i,j) reduction(max:vel_max)
+!$OMP parallel do private(i,j,k) reduction(max:vel_max)
 !$ACC parallel loop collapse(3) reduction(max:vel_max) async(1)
 do k = 1,2
 do i = 1,nx
