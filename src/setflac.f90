@@ -63,7 +63,7 @@ call init_marker
 call init_temp
 
 ! Check if melting present
-if (itype_melting .eq. 2) call check_camber
+if (itype_melting .eq. 2) call check_chamber
 
 ! Check if viscous rheology present
 call check_visc_rheol

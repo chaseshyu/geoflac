@@ -167,7 +167,7 @@ enddo
 return
 end subroutine fl_move
 
-subroutine check_camber
+subroutine check_chamber
     use arrays
     use params
     use phases
@@ -249,7 +249,7 @@ subroutine check_camber
     endif
     
 return
-end subroutine check_camber
+end subroutine check_chamber
 
 
 subroutine mor_melting(dh)

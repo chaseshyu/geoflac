@@ -89,7 +89,7 @@ do i = 1, nx-1
     if (jmoho(i).le.8) jmoho(i) = 8
 enddo
 
-if (nloop .ne. 0 .and. itype_melting.eq.2) call check_camber
+if (nloop .ne. 0 .and. itype_melting.eq.2) call check_chamber
 
 !   !$OMP parallel do
 !   !$ACC loop auto
