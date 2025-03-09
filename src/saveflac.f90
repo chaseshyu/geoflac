@@ -89,6 +89,11 @@ open (1,file='fmagma.rs',access='direct',recl=nwords*kindr)
 write (1,rec=nrec) fmagma
 close (1)
 
+!melt
+open (1,file='melt.rs',access='direct',recl=nwords*kindr) 
+write (1,rec=nrec) Eff_melt
+close (1)
+
 ! Heat sources
 open (1,file='source.rs',access='direct',recl=nwords*kindr) 
 write (1,rec=nrec) source

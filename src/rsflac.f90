@@ -91,6 +91,11 @@ open (1,file='aps.rs',access='direct',recl=nwords*kindr)
 read (1,rec=nrec) aps
 close (1)
 
+!melt
+open (1,file='melt.rs',access='direct',recl=nwords*kindr)
+read (1,rec=nrec) Eff_melt
+close (1)
+
 ! Magma
 open (1,file='fmagma.rs',access='direct',recl=nwords*kindr)
 read (1,rec=nrec) fmagma
