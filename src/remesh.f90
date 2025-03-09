@@ -460,7 +460,7 @@ double precision :: f1, f2, f3
 dummy = arr
 !$ACC end kernels
 
-!$OMP parallel do private(numq,io,jo,f1,f2,f3)
+!$OMP parallel do private(i,j,numq,io,jo,f1,f2,f3)
 !$ACC parallel loop collapse(2) async(1)
 do i = 1, nxt
     do j = 1, nzt
