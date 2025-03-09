@@ -35,11 +35,6 @@ if (istress_therm > 0 .or. itype_melting == 1) then
     !$ACC end kernels
 endif
 
-!!$OMP Parallel private(i,j,ii,jj,iph,cp_eff,dissip,diff,quad_area, &
-!!$OMP                  x1,x2,x3,x4,y1,y2,y3,y4,t1,t2,t3,t4,tmpr,fr_lambda, &
-!!$OMP                  delta_fmagma,deltaT,qs,real_area13,area_n,rhs, &
-!!$OMP                  jm,area_ratio,z_moho,z_melt,x_melt,h,x,z)
-
 if (itype_melting .ge. 1) then
     ! M: fmegma, magma fraction in the element
     ! dM/dt = P - M * fr_lambda
@@ -62,10 +57,12 @@ if (itype_melting .ge. 1) then
     ! Rearrage to: deltaT = delta_fmagma * latent_heat / cp
     ! This heat is distributed to the 4 corners evenly
     !
-    !$OMP parallel do private(i,j,cp_eff,tmpr,fr_lambda,delta_fmagma,deltaT) collapse(2)
+    do iblk = 1, 2
+    do jblk = 1, 2
+    !$OMP parallel do private(iblk,jblk,i,j,cp_eff,tmpr,fr_lambda,delta_fmagma,deltaT) collapse(2)
     !$ACC parallel loop collapse(2) async(1)
-    do i = 1,nx-1
-        do j = 1,nz-1
+    do i = iblk,nx-1,2
+        do j = jblk,nz-1,2
             cp_eff = Eff_cp( j,i )
             tmpr = 0.25d0*(temp0(j,i)+temp0(j+1,i)+temp0(j,i+1)+temp0(j+1,i+1))
             fr_lambda = lambda_freeze * exp(-lambda_freeze_tdep * (tmpr-t_top))
@@ -77,21 +74,15 @@ if (itype_melting .ge. 1) then
 
             ! latent heat released by freezing magma
             deltaT = delta_fmagma * latent_heat_magma / cp_eff / 4
-            !$OMP atomic update
-            !$ACC atomic update
             temp(j  ,i  ) = temp(j  ,i  ) + deltaT
-            !$OMP atomic update
-            !$ACC atomic update
             temp(j  ,i+1) = temp(j  ,i+1) + deltaT
-            !$OMP atomic update
-            !$ACC atomic update
             temp(j+1,i  ) = temp(j+1,i  ) + deltaT
-            !$OMP atomic update
-            !$ACC atomic update
             temp(j+1,i+1) = temp(j+1,i+1) + deltaT
         end do
     enddo
     !$OMP end parallel do
+    enddo
+    enddo
 
     if (itype_melting .eq. 1) then
         !$OMP parallel do private(i,j,jm,quad_area,area_ratio,ii,jj,z_moho,z_melt,x_melt,h,x,z) &
