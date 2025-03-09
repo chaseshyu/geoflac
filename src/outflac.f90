@@ -301,6 +301,11 @@ if( io_src.eq.1 ) then
     open (1,file='fmagma.0',access='direct',recl=nwords*kindr)
     write (1,rec=nrec) De
     close (1)
+
+    De(1:nz-1,1:nx-1) = real(Eff_melt(1:nz-1,1:nx-1))
+    open (1,file='eff_melt.0',access='direct',recl=nwords*kindr)
+    write (1,rec=nrec) De
+    close (1)
 endif
 
 
@@ -309,13 +314,12 @@ endif
 if( io_diss.eq.1 ) then
     do i = 1, nx-1
         do j = 1, nz-1
-            ! if(ishearh.ne.0) then
-            !    iph = iphase(j,i)
-            !    De(j,i) = real(shrheat(j,i)/den(iph)/hs)
-            ! else
-            !    De(j,i) = 0
-            ! endif
-            De(j,i) = real(Eff_melt(j,i))
+            if(ishearh.ne.0) then
+               iph = iphase(j,i)
+               De(j,i) = real(shrheat(j,i)/den(iph)/hs)
+            else
+               De(j,i) = 0
+            endif
         enddo
     enddo
     open (1,file='diss.0',access='direct',recl=nwords*kindr) 
