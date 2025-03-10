@@ -196,7 +196,7 @@ phasedat.inp   ; file with distribution of phase on the 2D grid (phasedat)
 ; latent_heat_magma, lambda_freeze, lambda_freeze_tdep
 4.2e5,                1e-13,         2e-3
 ; weaken_ratio_plastic, weaken_ratio_viscous
-0.01,                   0.01
+1.,                   1.
 ;
 ;=================================================================
 ;                       R e m e s h i n g
