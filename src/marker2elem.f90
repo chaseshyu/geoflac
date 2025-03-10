@@ -9,8 +9,6 @@ subroutine marker2elem
 
   integer :: i, j, kinc, inc, iseed, icount
   double precision :: x1, x2, y1, y2, xx, yy, r1, r2
-  double precision :: kn, xdepth, testu
-  integer :: mohod
   
   !character*200 msg
 
@@ -68,42 +66,41 @@ subroutine marker2elem
   enddo
   !$OMP end parallel do
 
-  ! Find the Moho
-
-jmoho(:) = 31 
-do i = 1, nx-1
-    kn = 0
-    do j = 1, nz-1
-        xdepth = cord(j+1,i,2)
-        testu = sum(phase_ratio(mantle_phases,j,i))
-        if ( testu > 0.5 .and. kn == 0) then
-            if (phase_ratio(1,j,i) > 0.1.or.fmelt(j,i)>0.) then
-                mohod = j - 1
-            else
-                mohod = j
+! Find the Moho
+if (itype_melting.eq.2) then
+    !$OMP parallel do private(i,j)
+    !$ACC loop auto
+    do i = 1, nx-1
+        jmoho(i) = nz-1
+        do j = 1, nz-1
+            if (sum(phase_ratio(mantle_phases,j,i)) > 0.5d0) then
+                if (phase_ratio(kmafic,j,i) > 0.1.or.fmelt(j,i)>0.) then
+                    jmoho(i) = j - 1
+                else
+                    jmoho(i) = j
+                endif
+                exit
             endif
-            kn = kn + 1
-        endif
+        enddo
+        if (jmoho(i).le.8) jmoho(i) = 8
     enddo
-    jmoho(i) = mohod
-    if (jmoho(i).le.8) jmoho(i) = 8
-enddo
+    !$OMP end parallel do
+else
+    !$OMP parallel do private(i,j)
+    !$ACC loop auto
+    do i = 1, nx-1
+        jmoho(i) = nz-1
+        do j = 1, nz-1
+            if (sum(phase_ratio(mantle_phases,j,i)) > 0.5d0) then
+                jmoho(i) = j
+                exit
+            endif
+        enddo
+    enddo
+    !$OMP end parallel do
+endif
 
 if (nloop .ne. 0 .and. itype_melting.eq.2) call check_chamber
 
-!   !$OMP parallel do
-!   !$ACC loop auto
-!   do i = 1, nx-1
-!       jmoho(i) = nz-1
-!       do j = 1, nz-1
-!           if (sum(phase_ratio(mantle_phases,j,i)) > 0.5d0) then
-!               jmoho(i) = j
-!               exit
-!           endif
-!       enddo
-!       !print *, i, jmoho(i)
-!   enddo
-!   !$OMP end parallel do
-
-  return
+return
 end subroutine marker2elem
