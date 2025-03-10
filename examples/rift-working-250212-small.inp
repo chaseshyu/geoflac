@@ -191,7 +191,7 @@ phasedat.inp   ; file with distribution of phase on the 2D grid (phasedat)
 ; fmagma_max, ratio_crust_mzone, ratio_mantle_mzone
 0.3,          0.8,               0.
 ; latent_heat_magma, lambda_freeze, lambda_freeze_tdep
-4.2e5,                1e-13,         2e-3
+4.2e5,                1e-8,          2e-1
 ; weaken_ratio_plastic, weaken_ratio_viscous
 1.,                   1.
 ;
