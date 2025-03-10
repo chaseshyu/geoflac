@@ -126,8 +126,7 @@ include 'precision.inc'
 !$ACC     incoming_left,incoming_right, &
 !$ACC     ivis_present,idt_scale,ifreq_imasses,ifreq_rmasses, &
 !$ACC     nloop,ifreq_avgsr,nsrate, &
-!$ACC     isolidus,ix1t,ix2t,iy1t,iy2t,igeotherm,icrust_melt,istart_profile,imagtop, &
-!$ACC     ibasement) async(1)
+!$ACC     isolidus,ix1t,ix2t,iy1t,iy2t,igeotherm,icrust_melt,istart_profile,imagtop) async(1)
 
 !$ACC update device(x0,z0,rxbo,rzbo,sizez_x(maxzone),sizez_y(maxzone), &
 !$ACC     dx_rem,angle_rem,topo_kappa,fac_kappa, &

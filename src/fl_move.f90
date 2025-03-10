@@ -232,21 +232,21 @@ subroutine check_chamber
     
     ! The bottom of the magma need to be 15 km above the max melt fraction ot We produce too much melt
     !  Find the basement below the extrusives and sediments
-    ibasement = 2! first guess below the extrusives
-    knn = 0
-    do j = 1, nz-1
-        testa = sum(phase_ratio(surface_phases,j,imagtop))
-        if ( testa> 0.5d0 .and. knn == 0) then
-            ibasement = j 
-            knn = knn + 1
-        endif
-    enddo
+    ! ibasement = 2! first guess below the extrusives
+    ! knn = 0
+    ! do j = 1, nz-1
+    !     testa = sum(phase_ratio(surface_phases,j,imagtop))
+    !     if ( testa> 0.5d0 .and. knn == 0) then
+    !         ibasement = j 
+    !         knn = knn + 1
+    !     endif
+    ! enddo
     
-    if (ibasement.le.2) then
-        ibasement = 2
-    else
-        ibasement = max(2,ibasement)
-    endif
+    ! if (ibasement.le.2) then
+    !     ibasement = 2
+    ! else
+    !     ibasement = max(2,ibasement)
+    ! endif
     
 return
 end subroutine check_chamber
@@ -266,7 +266,7 @@ double precision :: control_vol_ch, vc_rate, xintr, xmu, xsigma
 double precision :: unit_xmelt_migrated, xl_vol, quad_area, xdike_migrated
 double precision :: extru_limit, intru_limit, total_extru_strain, tmp, extru_melt
 integer :: i, j, ii, jj, kinc, n_to_add, kk, ihalfwidth_mzone
-integer :: iextru_start, iextru_end, nintru, iintru_bot
+integer :: iextru_start, iextru_end, nintru, iintru_bot, ibasement
     
 dlmin = dlmin_prop()
 
@@ -275,11 +275,12 @@ new_intrusion = 0.
 ii = imagtop
 totalmelt = 0.
 totalarea = 0.
+ibasement = 2
 
 mor_extrusion_rate = 1.d0 - ratio_crust_mzone - ratio_mantle_mzone
 mor_dike_rate = ratio_crust_mzone
 
-iintru_bot = jmoho(ii) - 5
+iintru_bot = jmoho(ii) - 1
 nintru = iintru_bot - ibasement + 1
 
 ihalfwidth_mzone = int(width_mzone / 2 / dxmin)
