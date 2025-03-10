@@ -202,6 +202,7 @@ function Eff_visc( j, i )
 !$ACC routine seq
 use arrays
 use params
+use phases
 use marker_data
 include 'precision.inc'
 
@@ -269,11 +270,10 @@ do k = 1, nphase
     else
         vis = 0.25*srat**pow*(0.75*acoef(k))**pow1* &
             exp((eactiv(k)+27.e-6*preslith)/(pln(k)*r*(tmpr+273.)))*1.e+6
-        if (k.eq.16) then
+        if (k.eq.khtmsz) then
             xxgz = 15.*0.25*(stressII(j,i)/1.e6)**(-4./3.)
             vis=(0.75*7.7e-2)**(-1.)*(xxgz**(2.))*exp(290.e3/r/(tmpr+273.))*1.e6
-        endif
-        if (k.eq.7.or.k.eq.1) then
+        elseif (k.eq.kocean2 .or. k.eq.kocean0) then
             xlava_age = 0.
             ! Lava flow at the surface must harden over the heat diffusion time scale L=1000 m, diff = 1e-6 m^2s-1
             ! Td cooling lava over 1 km (element size) is 1e6/1e-6 = 1e12 s.

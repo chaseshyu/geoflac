@@ -354,7 +354,7 @@ do i = ii-3, ii+3
             ! intrusion, add a mafic marker
             n_to_add = min(ceiling((xl_vol / quad_area) * kinc), max_markers_per_elem - kinc)
             do kk = 1, n_to_add
-                call add_marker_dike(jj,i, 1d0, time, nloop+i+kk, kmafic)
+                call add_marker_dike(jj,i, 1d0, time, nloop+i+kk, kocean0)
             enddo
             dv_intr(jj,i) = 0.
 

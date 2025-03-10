@@ -113,7 +113,7 @@ do kk = 1 , nmarkers
             mark_phase(kk) = khtmsz 
         endif
         endif
-    case (kocean1,kocean2,kmafic,ksills)
+    case (kocean1,kocean2,kocean0,ksills)
         ! basalt -> eclogite
         ! phase change pressure
         trpres = -0.3d9 + 2.2d6*tmpr

@@ -2,7 +2,7 @@
 module phases
 !! Phases the got special treatment in the code
 
-    integer, parameter :: kmafic = 1
+    integer, parameter :: kocean0 = 1
     integer, parameter :: kcont1 = 2
     integer, parameter :: kocean1 = 3
     integer, parameter :: kmant1 = 4
@@ -20,6 +20,6 @@ module phases
     integer, parameter :: khtmsz = 16
     integer, parameter :: kmeltlc = 17
     integer, parameter, dimension(6) :: mantle_phases = (/kmant1, kmant2, kserp, khtmsz, ksills, kocean1/)
-    integer, parameter, dimension(7) :: surface_phases = (/kcont1, kcont2, kweakmc, ksed1, ksed2, kocean2, kmafic/)
+    integer, parameter, dimension(7) :: surface_phases = (/kcont1, kcont2, kweakmc, ksed1, ksed2, kocean2, kocean0/)
     
 end module phases

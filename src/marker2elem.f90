@@ -74,7 +74,7 @@ if (itype_melting.eq.2) then
         jmoho(i) = nz-1
         do j = 1, nz-1
             if (sum(phase_ratio(mantle_phases,j,i)) > 0.5d0) then
-                if (phase_ratio(kmafic,j,i) > 0.1.or.fmelt(j,i)>0.) then
+                if (phase_ratio(kocean0,j,i) > 0.1.or.fmelt(j,i)>0.) then
                     jmoho(i) = j - 1
                 else
                     jmoho(i) = j
