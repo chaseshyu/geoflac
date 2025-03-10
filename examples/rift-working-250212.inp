@@ -106,7 +106,7 @@ proftemp.dat   temperature profile dat.file
 ;11- visco-elasto-plastic (Mohr-Coulomb,Fixed Maxwell,Newtonian) with softening
 ;12- visco-elasto-plastic (Mohr-Coulomb,Maxwell,Non-Newtonian) with softening
 ;
-17  Number of Different Rheologies (<20)
+20  Number of Different Rheologies (<20)
 ;
 ;irheol,_,den, alfa,  beta,    n,       A,       E,    Lame:rl, Lame:rm,pls1,pls2,fric1,fric2, coh1, coh2,dilat1,dilat2,cond,    cp,     Ts,     Tl,     Tk, fk
 ;(1) basalt melt, 
@@ -117,8 +117,8 @@ proftemp.dat   temperature profile dat.file
 12,1., 2900., 3.0e-5, 0.0e-11, 3.05, 1.25e-1, 2.76e+5, 4.3e+10, 4.3e+10, 0.0, 0.1, 30.0, 30.0, 4.e+7, 4.e+6,   0.0,   0.0, 3.3, 1000., 13000., 16000., 16000., 1.
 ;(4) olivine, same as (8)
 12,1., 3300., 3.0e-5, 0.0e-11, 3.50, 1.10e+5, 5.30e+5, 6.7e+10, 6.7e+10, 0.0, 5., 30.0, 30.0, 4.e+7, 4.e+6,   0.0,   0.0, 3.3, 1000., 13000., 16000., 16000., 1.
-;(5) sills of gabbros
-12,1., 2900., 3.0e-5, 0.0e-11, 3.05, 1.25e-1, 2.76e+5, 4.3e+10, 4.3e+10, 0.0, 0.1, 30.0, 30.0, 4.e+7, 4.e+6,   0.0,   0.0, 3.3, 1000., 13000., 16000., 16000., 1.
+;(5) shist, transformed from (17)
+11,1., 2900., 3.0e-5, 0.0e-12, 3.00, 7.00e+4, 3.76e+5, 3.0e+10, 3.0e+10, 0.0, 0.1, 30.0, 15.0, 4.e+7, 4.e+6,   0,     0,  3.3, 1000., 13000., 16000., 16000., 1.
 ;(6) continental crust, same as (2)
 12,1., 2750., 3.0e-5, 0.0e-11, 3.05, 1.25e-1, 2.76e+5, 4.0e+10, 3.5e+10, 0.0, 0.1, 30.0, 15.0, 4.e+7, 4.e+6,   0.0,   0.0, 3.3, 1000., 13000., 16000., 16000., 1.
 ;(7) basalt (extrustives), same as (3)
@@ -139,9 +139,15 @@ proftemp.dat   temperature profile dat.file
 12,1., 2850., 3.0e-5, 0.0e-11, 3.05, 1.25e-1, 8.76e+5, 3.0e+10, 3.0e+10, 0.0, 0.1, 30.0, 30.0, 4.e+7, 4.e+6,   0.0,   0.0, 3.3, 1000., 13000., 16000., 16000., 1.
 ;(15) weak middle crust, transformed from (2) and (6) if stressed and heated (disabled)
 12,1., 2750., 3.0e-5, 0.0e-11, 3.00, 5.00e2 , 2.00e+5, 3.0e+10, 3.0e+10, 0.0, 0.1,  30.0, 5.0,4.e+7, 4.e+6,   0.0,   0.0, 3.3, 1000., 13000., 16000., 16000., 1.
-;(16) olivine, same as (8)
+;(16) olivine, hydated (chlorite-containing)
+12,1., 3200., 3.0e-5, 0.0e-12, 3.00, 7.00e+4, 5.20e+5, 3.0e+10, 3.0e+10, 0.0, 0.1, 30.0, 15.0, 4.e+7, 4.e+6,   0,     0,  3.3, 1000., 13000., 16000., 16000., 1.
+;(17) metamorphic sedimentary rock, transformed from (10)
+12,1., 2800., 3.0e-5, 0.0e-11, 3.00, 5.00e2 , 2.00e+5, 3.0e+10, 3.0e+10, 0.0, 0.1, 30.0, 15.0, 4.e+7, 4.e+6,   0,     0,  3.3, 1000., 13000., 16000., 16000., 1.
+;(18) sills of gabbros
+12,1., 2900., 3.0e-5, 0.0e-11, 3.05, 1.25e-1, 2.76e+5, 4.3e+10, 4.3e+10, 0.0, 0.1, 30.0, 30.0, 4.e+7, 4.e+6,   0.0,   0.0, 3.3, 1000., 13000., 16000., 16000., 1.
+;(19) khtmsz transformed from (4) and (8)
 12,1., 3300., 3.0e-5, 0.0e-11, 3.00, 7.00e+4, 2.20e+5, 6.7e+10, 6.7e+10, 0.0, 0.1,  30.0,  30.0,4.e+7,4.e+6,   0.0,   0.0, 3.3, 1000., 13000., 16000., 16000., 1.
-;(17) Melted lower crust (Gerya, plagioclase)
+;(20) Melted lower crust (Gerya, plagioclase)
 12,1., 2500., 3.0e-5, 0.0e-11, 3.2, 3.3e-4, 2.38e+5, 4.3e+10, 4.3e+10, 0.0, 0.1, 30.0,  30.0,4.e+7,4.e+7,   0.0,   0.0, 3.3, 1000., 13000., 16000., 16000., 1.
 ;
 ; INITIAL PHASE DISTRIBUTION
