@@ -187,21 +187,12 @@ phasedat.inp   ; file with distribution of phase on the 2D grid (phasedat)
 ;igeotherm  g_x0,    g_y0c   g_amplitude  g_width
 0,         125.e+3,  -20.e+3,  5.e+3,       30.e+3
 ;Magma:
-; itype_melting, 
-2
-; If itype_melting == 1
-;
-;nelem_serp, prod_magma, rho_magma
-;2,          2e-15,      2700
-; angle_mzone, fmagma_max, ratio_mantle_mzone
-;30,            0.1,        0.1
-;
-; If itype_melting == 2
-; nelem_serp, prod_magma
-2,     4e-13
-; width_mzone, fmagma_max, ratio_crust_mzone, ratio_mantle_mzone
-100.e3,          0.3,         0.8,              0.
-;
+; itype_melting, nelem_serp, prod_magma, rho_magma
+2,               2,          4e-13,      2700
+; mzone_style (1:angle; 2:width), mzone_charact (0:degree, 1:meter)
+2,                                  100.e3
+; fmagma_max, ratio_crust_mzone, ratio_mantle_mzone
+0.3,          0.8,               0.
 ; latent_heat_magma, lambda_freeze, lambda_freeze_tdep
 4.2e5,                1e-13,         2e-3
 ; weaken_ratio_plastic, weaken_ratio_viscous
@@ -245,10 +236,10 @@ phasedat.inp   ; file with distribution of phase on the 2D grid (phasedat)
 4001   ; change to 10000 to see subduction
 ;
 ; Time interval for screen output of calc. progress (in Kyr)
-1
+10
 ;
 ; Time interval for file output (in Kyr)
-2
+20
 ;
 ; Variables to print
 ; vel srII eII aps sII sxx szz sxz pres temp melt visc phas mark src diss forc hfl topo

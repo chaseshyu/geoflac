@@ -5,6 +5,7 @@ use arrays
 use params
 include 'precision.inc'
 
+double precision :: mzone_charact
 character*200 inputfile
 
 iu = 4
@@ -253,20 +254,18 @@ call AdvanceToNextInputLine(4, line)
 read(4,*,err=1000) igeotherm, g_x0, g_y0c, g_amplitude, g_width 
 line = line + 1
 call AdvanceToNextInputLine(4, line)
-read(4,*,err=1000) itype_melting
+read(4,*,err=1000) itype_melting, nelem_serp, prod_magma, rho_magma
 line = line + 1
 call AdvanceToNextInputLine(4, line)
-if (itype_melting .eq. 1) then
-    read(4,*,err=1000) nelem_serp, prod_magma, rho_magma
-    line = line + 1
-    call AdvanceToNextInputLine(4, line)
-    read(4,*,err=1000) angle_mzone, fmagma_max, ratio_mantle_mzone
-elseif (itype_melting .eq. 2) then
-    read(4,*,err=1000)nelem_serp, prod_magma
-    line = line + 1
-    call AdvanceToNextInputLine( 4,line)
-    read(4,*,err=1000) width_mzone, fmagma_max, ratio_crust_mzone, ratio_mantle_mzone
-end if
+read(4,*,err=1000) mzone_style, mzone_charact
+line = line + 1
+call AdvanceToNextInputLine(4, line)
+read(4,*,err=1000) fmagma_max, ratio_crust_mzone, ratio_mantle_mzone
+if (mzone_style.eq.1) then
+    angle_mzone = mzone_charact
+elseif (mzone_style.eq.2) then
+    width_mzone = mzone_charact
+endif
 line = line + 1
 call AdvanceToNextInputLine(4, line)
 read(4,*,err=1000) latent_heat_magma, lambda_freeze, lambda_freeze_tdep
