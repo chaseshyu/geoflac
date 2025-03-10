@@ -51,7 +51,7 @@ dt_maxwell = 1.d+28
 
 visc_cut = 1.d+17
 vel_max = 0.d0
-!$OMP parallel do private(i,j,k) reduction(max:vel_max)
+!$OMP parallel do private(i,j,k) reduction(max:vel_max) collapse(2)
 !$ACC parallel loop collapse(3) reduction(max:vel_max) async(1)
 do k = 1,2
 do i = 1,nx
@@ -63,8 +63,8 @@ enddo
 
 vis_min = 1.e30
 !$OMP parallel do private(i,j) reduction(min:vis_min)
-do i = 1,nx-1
 do j = 1,nz-1
+do i = 1,nx-1
     vis_min = min(vis_min,visn(j,i))
 enddo
 enddo
@@ -82,84 +82,84 @@ end if
 vel_sound = dlmin*frac/dt_elastic
 
 do iblk = 1, 2
-    do jblk = 1, 2
-        !$OMP parallel do private(iph, pwave, dens, rho_inert, rho_inert2, vel_sound_tmp, &
-        !$OMP                     am3, dte, diff, dtt, dt_m, rmu) reduction(min:dt_elastic,dtmax_therm, dt_maxwell)
-        !$ACC parallel loop collapse(2) reduction(min:dt_elastic,dtmax_therm,dt_maxwell) async(1)
-        do i = iblk, nx-1, 2
-            do j = jblk, nz-1, 2
-                iph     = iphase(j,i)
-                pwave   = rl(iph) + 0.6666d0*rm(iph)
-                if (vis_min.lt.visc_cut) pwave = rl(iph) + 0.6666*rm(iph)*vis_min/visc_cut 
-                dens    = den(iph)
-                rho_inert = pwave/(vel_sound*vel_sound)
-                if (i_rey.eq.1.and.vel_max.gt.vbc) then
-                    rho_inert2 = (xReyn*v_min)/(vel_max*abs(rzbo))
-                    if (rho_inert.gt.rho_inert2) then
-                        rho_inert = rho_inert2
-                        vel_sound_tmp = sqrt(pwave/rho_inert2)
-                        dt_elastic = min(dt_elastic,dlmin*frac/vel_sound_tmp)
-                    endif
+do jblk = 1, 2
+!$OMP parallel do private(iph, pwave, dens, rho_inert, rho_inert2, vel_sound_tmp, &
+!$OMP                     am3, dte, diff, dtt, dt_m, rmu) reduction(min:dt_elastic,dtmax_therm,dt_maxwell)
+!$ACC parallel loop collapse(2) reduction(min:dt_elastic,dtmax_therm,dt_maxwell) async(1)
+do i = iblk, nx-1, 2
+    do j = jblk, nz-1, 2
+        iph     = iphase(j,i)
+        pwave   = rl(iph) + 0.6666d0*rm(iph)
+        if (vis_min.lt.visc_cut) pwave = rl(iph) + 0.6666*rm(iph)*vis_min/visc_cut 
+        dens    = den(iph)
+        rho_inert = pwave/(vel_sound*vel_sound)
+        if (i_rey.eq.1.and.vel_max.gt.vbc) then
+            rho_inert2 = (xReyn*v_min)/(vel_max*abs(rzbo))
+            if (rho_inert.gt.rho_inert2) then
+                rho_inert = rho_inert2
+                vel_sound_tmp = sqrt(pwave/rho_inert2)
+                dt_elastic = min(dt_elastic,dlmin*frac/vel_sound_tmp)
+            endif
+        endif
+        ! Find the inert. density for given geometry, elas_mod and dt_scale
+        ! idt_scale = 0 (dt = frac*dx_min * sqrt(dens/pwave) )
+        ! idt_scale = 1 (dt is taken from sup.dat: dt = dt_scale)
+        ! idt_scale = 2 (dt = frac*dx_min * tolerance/Vbc_max)
+        if (idt_scale.gt.0) then
+
+            ! Distribution 1/3 of the inertial mass of each element to the nodes
+            ! am3=c1d12*area(j,i,ii)*pwave*(dlmax*dt_scale/frac)**2
+            ! 1/12 = 1/3 * 1/2 (2 meshes) * 1/2 (1/area_num = 2 area_real)
+            am3=c1d12*rho_inert/area(j,i,1)
+            amass(j  ,i  ) = amass(j  ,i  ) + am3
+            amass(j+1,i  ) = amass(j+1,i  ) + am3
+            amass(j  ,i+1) = amass(j  ,i+1) + am3
+
+            am3=c1d12*rho_inert/area(j,i,2)
+            amass(j+1,i  ) = amass(j+1,i  ) + am3
+            amass(j+1,i+1) = amass(j+1,i+1) + am3
+            amass(j  ,i+1) = amass(j  ,i+1) + am3
+
+            am3=c1d12*rho_inert/area(j,i,3)
+            amass(j  ,i  ) = amass(j  ,i  ) + am3
+            amass(j+1,i  ) = amass(j+1,i  ) + am3
+            amass(j+1,i+1) = amass(j+1,i+1) + am3
+
+            am3=c1d12*rho_inert/area(j,i,4)
+            amass(j  ,i  ) = amass(j  ,i  ) + am3
+            amass(j+1,i+1) = amass(j+1,i+1) + am3
+            amass(j  ,i+1) = amass(j  ,i+1) + am3
+
+        else  ! idt_scale=0
+            ! Find the dtime for given geometry, density and elas_mod
+            dte = frac*dlmin*sqrt(dens/pwave)
+            dt_elastic = min(dt_elastic,dte)
+        endif
+
+        ! Find the maximum THERMAL time step from Stability Criterion
+        ! dtmax = dxmin^2/diffusivity = dx^2/(lyamda/cp*dens)
+        diff = Eff_conduct(j,i)/den(iph)/Eff_cp(j,i)
+        dtt = dlmin*dlmin/diff
+        dtmax_therm = min(dtmax_therm,dtt)
+
+        ! Calculate maxwell time step
+        if (ivis_present .eq. 1) then
+            !dt_m =visn(j,i)/rm(iph)*fracm
+            if( (irheol(iph).eq.3 .OR. irheol(iph).eq.12) .AND. rm(iph).lt.1.d+11 ) then
+                if( vis_min .lt. visc_cut ) then
+                    rmu = rm(iph) * vis_min/visc_cut
+                else
+                    rmu = rm(iph)
                 endif
-                ! Find the inert. density for given geometry, elas_mod and dt_scale
-                ! idt_scale = 0 (dt = frac*dx_min * sqrt(dens/pwave) )
-                ! idt_scale = 1 (dt is taken from sup.dat: dt = dt_scale)
-                ! idt_scale = 2 (dt = frac*dx_min * tolerance/Vbc_max)
-                if (idt_scale.gt.0) then
+                dt_m =vis_min/rmu * fracm
+                dt_maxwell = min(dt_m,dt_maxwell)
+            endif
+        endif
 
-                    ! Distribution 1/3 of the inertial mass of each element to the nodes
-                    ! am3=c1d12*area(j,i,ii)*pwave*(dlmax*dt_scale/frac)**2
-                    ! 1/12 = 1/3 * 1/2 (2 meshes) * 1/2 (1/area_num = 2 area_real)
-                    am3=c1d12*rho_inert/area(j,i,1)
-                    amass(j  ,i  ) = amass(j  ,i  ) + am3
-                    amass(j+1,i  ) = amass(j+1,i  ) + am3
-                    amass(j  ,i+1) = amass(j  ,i+1) + am3
-
-                    am3=c1d12*rho_inert/area(j,i,2)
-                    amass(j+1,i  ) = amass(j+1,i  ) + am3
-                    amass(j+1,i+1) = amass(j+1,i+1) + am3
-                    amass(j  ,i+1) = amass(j  ,i+1) + am3
-
-                    am3=c1d12*rho_inert/area(j,i,3)
-                    amass(j  ,i  ) = amass(j  ,i  ) + am3
-                    amass(j+1,i  ) = amass(j+1,i  ) + am3
-                    amass(j+1,i+1) = amass(j+1,i+1) + am3
-
-                    am3=c1d12*rho_inert/area(j,i,4)
-                    amass(j  ,i  ) = amass(j  ,i  ) + am3
-                    amass(j+1,i+1) = amass(j+1,i+1) + am3
-                    amass(j  ,i+1) = amass(j  ,i+1) + am3
-
-                else  ! idt_scale=0
-                    ! Find the dtime for given geometry, density and elas_mod
-                    dte = frac*dlmin*sqrt(dens/pwave)
-                    dt_elastic = min(dt_elastic,dte)
-                endif
-
-                ! Find the maximum THERMAL time step from Stability Criterion
-                ! dtmax = dxmin^2/diffusivity = dx^2/(lyamda/cp*dens)
-                diff = Eff_conduct(j,i)/den(iph)/Eff_cp(j,i)
-                dtt = dlmin*dlmin/diff
-                dtmax_therm = min(dtmax_therm,dtt)
-
-                ! Calculate maxwell time step
-                if (ivis_present .eq. 1) then
-                    !dt_m =visn(j,i)/rm(iph)*fracm
-                    if( (irheol(iph).eq.3 .OR. irheol(iph).eq.12) .AND. rm(iph).lt.1.d+11 ) then
-                        if( vis_min .lt. visc_cut ) then
-                            rmu = rm(iph) * vis_min/visc_cut
-                        else
-                            rmu = rm(iph)
-                        endif
-                        dt_m =vis_min/rmu * fracm
-                        dt_maxwell = min(dt_m,dt_maxwell)
-                    endif
-                endif
-
-            enddo
-        enddo
-        !$OMP end parallel do
     enddo
+enddo
+!$OMP end parallel do
+enddo
 enddo
 
 !$ACC update self(dt_elastic, dt_maxwell) async(1)
