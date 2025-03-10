@@ -7,10 +7,16 @@ use params
 include 'precision.inc'
 
 !$ACC kernels async(1)
+!$OMP sections
+!$OMP section
 mark_id_elem(:,:,:) = 0
+!$OMP section
 nmark_elem(:,:) = 0
+!$OMP section
 Emeltcounter(:,:) = 0.
+!$OMP section
 zpresscounter(:,:) = 0.
+!$OMP end sections
 !$ACC end kernels
 
 !$OMP parallel do private(n,k,j,i,xx,yy,bar1,bar2,ntr,inc)
