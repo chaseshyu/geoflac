@@ -136,10 +136,6 @@ call AdvanceToNextInputLine(4, line)
 read (4,*,err=1000) itemp_bc, bot_bc
 line = line + 1
 if( itemp_bc.eq.2 ) bot_bc = bot_bc/1000  ! convert in W/m3
-! temperature pertrubation (rectangular)
-call AdvanceToNextInputLine(4, line)
-read (4,*,err=1000) temp_per, ix1t, ix2t, iy1t, iy2t
-line = line + 1
 ! Predefined distributions
 call AdvanceToNextInputLine(4, line)
 read(4,*,err=1000) irtemp

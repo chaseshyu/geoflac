@@ -91,9 +91,6 @@
 ; Bottom Boundary conditions flag and value (1- temperature, 2- heat flux in mW/m2 ) 
 1 1330. 
 ;
-; Initial additional perturbation (quadralateral)
-0.,40,50,3,8          - temp_per,ix1,ix2,iy1,iy2 (box of thermal perturbation)
-;
 ; Predefined distributions
 0              irtemp (0,1) (read temperature file or not)
 proftemp.dat   temperature profile dat.file

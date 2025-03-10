@@ -223,13 +223,7 @@ if (igeotherm .eq. 1) then
                 end if
             endif          
         enddo
-
     enddo
-
-    ! Initial rectangular temperature perturbation
-    if( temp_per.ne.0. ) then
-        temp(iy1t:iy2t,ix1t:ix2t) = temp(iy1t:iy2t,ix1t:ix2t) + temp_per
-    endif
 endif
 
 !call RedefineTemp
