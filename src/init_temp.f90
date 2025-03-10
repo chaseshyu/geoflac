@@ -125,7 +125,7 @@ do i = 1, inhom
     endif
 enddo
 
-if (itype_melting .eq. 2) then
+if (igeotherm .eq. 1) then
     !!  geotherm of a given age accross the box with variable age
     cond_c = 2.3
     cond_m = 3.3
@@ -155,7 +155,7 @@ if (itype_melting .eq. 2) then
                 yc = 0.25*(cord (j,i  ,2) + cord(j+1,i  ,2) + &
                         cord (j,i+1,2) + cord(j+1,i+1,2))
             endif
-            xsfh  = shf + 20.*exp(-((xc-g_x0)/g_width)**2.)
+            xsfh  = shf + g_amplitude/1e3*exp(-((xc-g_x0)/g_width)**2.)
             auc = (1. - F)*xsfh*1.e-3/(huc*1000.) ! UpperCrust heat generation
             ! Bootstrap through temps w depth
             temp(1,i) = t_top 
@@ -393,7 +393,7 @@ age_1n = age_1(n)
 tp1n = tp1(n)
 tp2n = tp2(n)
 
-if (itype_melting .eq. 2) then
+if (igeotherm .eq. 1) then
     tr= dens_c*hs*hr*hr*1.e+6/cond_c*exp(1.-exp(-(huc+hlc)/hr))
     q_m = (t_bot-t_top-tr)/(((huc+hlc)*1000.)/cond_c+((200.e3-(xhc)*1000.))/cond_m)
     tm  = t_top + (q_m/cond_c)*(huc+hlc)*1000. + tr

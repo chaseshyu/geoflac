@@ -157,6 +157,6 @@ include 'precision.inc'
 !$ACC     weaken_ratio_plastic,weaken_ratio_viscous, &
 !$ACC     dtavg, &
 !$ACC     time,dt,time_max,
-!$ACC     temp_per,g_x0,g_y0c,g_amplitude,g_width,width_mzone,ratio_crust_mzone, &
+!$ACC     temp_per,g_x0,g_amplitude,g_width,width_mzone,ratio_crust_mzone, &
 !$ACC     watercont,xmodalcpx,dumC(4),xDF(4),xDT(4)) async(1)
 end

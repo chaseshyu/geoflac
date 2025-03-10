@@ -253,6 +253,15 @@ Phase changes are activated and will take place among certain of the defined pha
 
 | Parameters  | Types |  Description  |
 |:------------|:-----:|:--------------|
+|**igeotherm,  g_x0,    g_amplitude,  g_width**|1 int 3 dbl|See below.|
+
+* **igeotherm**: 0 for nothing. 1 for dune shape thermal structure
+* **g_x0**: center of thermal structure (meter)
+* **g_amplitude**: lithospheric mantle uplife at center (meter)
+* **g_width**: width of dune (meter)
+
+| Parameters  | Types |  Description  |
+|:------------|:-----:|:--------------|
 |**itype-melting, nelem-serp, prod-magma, rho-magma**|2 int, 2 dbl| See below.|
 |**mzone-style, mzone_charact**|1 int, 1 dbl| See below.|
 |**fmagma-max, ratio-crust-mzone, ratio-mantle-mzone**|3 dbl| See below.|

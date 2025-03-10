@@ -94,7 +94,7 @@ real*8 :: x0,z0,rxbo,rzbo,sizez_x(maxzone),sizez_y(maxzone), &
      dtavg, &
      time,dt,time_max, &
      ! magma migration related
-     temp_per,g_x0,g_y0c,g_amplitude,g_width,width_mzone,ratio_crust_mzone, &
+     temp_per,g_x0,g_amplitude,g_width,width_mzone,ratio_crust_mzone, &
      watercont,xmodalcpx,dumC(4),xDF(4),xDT(4)
 
 !$ACC declare create(x0,z0,rxbo,rzbo,sizez_x(maxzone),sizez_y(maxzone), &
@@ -125,7 +125,7 @@ real*8 :: x0,z0,rxbo,rzbo,sizez_x(maxzone),sizez_y(maxzone), &
 !$ACC     weaken_ratio_plastic,weaken_ratio_viscous, &
 !$ACC     dtavg, &
 !$ACC     time,dt,time_max, &
-!$ACC     temp_per,g_x0,g_y0c,g_amplitude,g_width,width_mzone,ratio_crust_mzone, &
+!$ACC     temp_per,g_x0,g_amplitude,g_width,width_mzone,ratio_crust_mzone, &
 !$ACC     watercont,xmodalcpx,dumC(4),xDF(4),xDT(4))
 
 character phasefile*20,tempfile*20,coordfile*20

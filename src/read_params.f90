@@ -251,7 +251,7 @@ call AdvanceToNextInputLine(4, line)
 read(4,*,err=1000) v_min, v_max, ivis_shape,efoldc
 line = line + 1
 call AdvanceToNextInputLine(4, line)
-read(4,*,err=1000) igeotherm, g_x0, g_y0c, g_amplitude, g_width 
+read(4,*,err=1000) igeotherm, g_x0, g_amplitude, g_width 
 line = line + 1
 call AdvanceToNextInputLine(4, line)
 read(4,*,err=1000) itype_melting, nelem_serp, prod_magma, rho_magma
