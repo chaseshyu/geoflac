@@ -11,8 +11,8 @@ integer :: i, j, n, i1, i2, k, kk, ixc, iwidth
 double precision :: age_1n, tp1n, tp2n, ratio, amp, y, pert, pert2
 
 double precision :: cond_c, cond_m, dens_c, dens_m, pi, diffusivity
-double precision :: ainitdepth, F, am, alc, xc, yc, xsfh, auc, xdz, zPotT
-integer :: kl, dum, ixtb1_new, ixtb2_new
+double precision :: F, am, alc, xc, yc, xsfh, auc, xdz, zPotT
+integer :: kl, dum
 double precision :: shf, huc, hlc
 double precision :: Q(nz,nx)
 
@@ -137,17 +137,14 @@ if (igeotherm .eq. 1) then
     shf = 70.
     huc = 6.
     hlc = 2.
-    ixtb1_new = 1
-    ixtb2_new = nx
+    F = 0.74 ! Partition coefficient
+    alc = 0.4e-6 ! LowerCrust HG
+    am = 0.02e-6 ! Mantle HG
+
     !! Continental geotherm
     ! After HasterokChapman 2011
-    do i = ixtb1_new, ixtb2_new
+    do i = 1, nx
         kl = 0
-        ainitdepth = 0.
-        F = 0.74 ! Partition coefficient
-
-        alc = 0.4e-6 ! LowerCrust HG
-        am = 0.02e-6 ! Mantle HG
         do j = 1,nz-1
             if (i.lt.nx) then
                 xc = 0.25*(cord (j,i  ,1) + cord(j+1,i  ,1) + &
