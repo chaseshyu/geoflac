@@ -128,7 +128,7 @@ do k = 1, nphase
 
         if ((xfmelt(j,i)  + Eff_melt(j,i)).gt.0.95) xfmelt(j,i) = 0.
 
-        dens = dens * ( 1.- (xfmelt(j,i)  + Eff_melt(j,i))) + 2900.*(xfmelt(j,i)  + Eff_melt(j,i))
+        dens = dens * ( 1.- (xfmelt(j,i)  + Eff_melt(j,i))) + rho_magma*(xfmelt(j,i)  + Eff_melt(j,i))
     endif
 
     Eff_dens = Eff_dens + ratio*dens

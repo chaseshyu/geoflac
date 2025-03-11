@@ -191,7 +191,7 @@ phasedat.inp   ; file with distribution of phase on the 2D grid (phasedat)
 1,         125.e+3,   20.e+3,      30.e+3
 ;Magma:
 ; itype_melting, nelem_serp, prod_magma, rho_magma
-2,               2,          4e-13,      2700
+2,               2,          4e-13,      2900.
 ; mzone_style (1:angle; 2:width), mzone_charact (0:degree, 1:meter)
 2,                                  100.e3
 ; fmagma_max, ratio_crust_mzone, ratio_mantle_mzone
