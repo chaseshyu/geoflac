@@ -131,6 +131,10 @@ write (1,rec=nrec) mark_y(1:nmarkers)
 nrec = nrec + 1
 write (1,rec=nrec) mark_age(1:nmarkers)
 nrec = nrec + 1
+write (1,rec=nrec) mark_zpressn(1:nmarkers)
+nrec = nrec + 1
+write (1,rec=nrec) mark_Emeltm(1:nmarkers)
+nrec = nrec + 1
 close (1)
 
 nrec = 1
