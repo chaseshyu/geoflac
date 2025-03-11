@@ -87,19 +87,20 @@ do kk = 1 , nmarkers
     case (kcont1, kcont2)
         ! XXX: middle crust with high dissipation becomes weaker,
         ! this helps with localization
-        if(i.ge.10.and.i.le.490) then
-        if(depth.le.20.e3) then
-        if(tmpr >= 250. .and. tmpr <= 300. &
-            .and. stressII(j,i)*strainII(j,i) > 1.e7) then   ! 1.e7
-            !$ACC atomic write
-            !$OMP atomic write
-            itmp(j,i) = 1
-            mark_phase(kk) = kweakmc
-        endif
-        endif
-        endif
-            
-            
+        if (itype_melting.eq.2) then
+            if(i.ge.10.and.i.le.490) then
+            if(depth.le.20.e3) then
+            if(tmpr >= 250. .and. tmpr <= 300.) then
+            if(stressII(j,i)*strainII(j,i) > 1.e7) then   ! 1.e7
+                !$ACC atomic write
+                !$OMP atomic write
+                itmp(j,i) = 1
+                mark_phase(kk) = kweakmc
+            endif
+            endif
+            endif
+            endif
+        endif            
     case (kmant1,kmant2)
         ! subuducted oceanic crust below mantle, mantle is serpentinized
         ! if(depth > max_basalt_depth) cycle
@@ -123,15 +124,17 @@ do kk = 1 , nmarkers
             endif
         enddo
 
-        ! after 1 Myr, form mantle detachments
-        if(ystime.gt.1.) then
-        if(tmpr.gt.800. .and. tmpr.lt.1000. .and. &
-            stressII(j,i)*srateII(j,i).ge.200.e-8) then
-            !$ACC atomic write
-            !$OMP atomic write
-            itmp(j,i) = 1
-            mark_phase(kk) = khtmsz 
-        endif
+        if (itype_melting.eq.2) then
+            ! after 1 Myr, form mantle detachments
+            if(ystime.gt.1.) then
+            if(tmpr.gt.800. .and. tmpr.lt.1000. .and. &
+                stressII(j,i)*srateII(j,i).ge.200.e-8) then
+                !$ACC atomic write
+                !$OMP atomic write
+                itmp(j,i) = 1
+                mark_phase(kk) = khtmsz 
+            endif
+            endif
         endif
     case (kocean0, kocean1, kocean2, ksills)
         ! basalt -> eclogite
@@ -196,13 +199,15 @@ do kk = 1 , nmarkers
         itmp(j,i) = 1
         mark_phase(kk) = kmant1        
     case (khtmsz)
-        if (tmpr.le.serpentine_temp) then
-        if (aps(j,i).ge.0.1) then
-            !$ACC atomic write
-            !$OMP atomic write
-            itmp(j,i) = 1
-            mark_phase(kk) = kserp
-        endif
+        if (itype_melting.eq.2) then
+            if (tmpr.le.serpentine_temp) then
+            if (aps(j,i).ge.0.1) then
+                !$ACC atomic write
+                !$OMP atomic write
+                itmp(j,i) = 1
+                mark_phase(kk) = kserp
+            endif
+            endif
         endif
     end select
 
@@ -236,119 +241,119 @@ do i = 1, nx-1
 enddo
 !$OMP end parallel do
 
-! if (itype_melting == 1) then
-!     !$OMP parallel do private(tmpr, yy, depth, solidus, pmelt, total_phase_ratio)
-!     !$ACC parallel loop collapse(2) async(1)
-!     do i = 1, nx-1
-!         do j = 1, nz-1
-!             fmelt(j,i) = 0
+if (itype_melting == 1) then
+    !$OMP parallel do private(tmpr, yy, depth, solidus, pmelt, total_phase_ratio)
+    !$ACC parallel loop collapse(2) async(1)
+    do i = 1, nx-1
+        do j = 1, nz-1
+            fmelt(j,i) = 0
 
-!             ! sedimentary rock melting
-!             ! solidus from Nichols, 1994 Nature
-!             total_phase_ratio = phase_ratio(ksed1,j,i) + phase_ratio(ksed2,j,i) + &
-!                               phase_ratio(kmetased,j,i) + phase_ratio(kschist,j,i)
-!             if (total_phase_ratio > 0.6d0 .and. cord(j,i,2) > -max_melting_depth) then
-!                 tmpr = 0.25d0 * (temp(j,i)+temp(j,i+1)+temp(j+1,i)+temp(j+1,i+1))
+            ! sedimentary rock melting
+            ! solidus from Nichols, 1994 Nature
+            total_phase_ratio = phase_ratio(ksed1,j,i) + phase_ratio(ksed2,j,i) + &
+                              phase_ratio(kmetased,j,i) + phase_ratio(kschist,j,i)
+            if (total_phase_ratio > 0.6d0 .and. cord(j,i,2) > -max_melting_depth) then
+                tmpr = 0.25d0 * (temp(j,i)+temp(j,i+1)+temp(j+1,i)+temp(j+1,i+1))
 
-!                 ! depth below the surface in m
-!                 yy = 0.25d0 * (cord(j,i,2)+cord(j,i+1,2)+cord(j+1,i,2)+cord(j+1,i+1,2))
-!                 depth = 0.5d0*(cord(1,i,2)+cord(1,i+1,2)) - yy
+                ! depth below the surface in m
+                yy = 0.25d0 * (cord(j,i,2)+cord(j,i+1,2)+cord(j+1,i,2)+cord(j+1,i+1,2))
+                depth = 0.5d0*(cord(1,i,2)+cord(1,i+1,2)) - yy
 
-!                 solidus = max(680+0.6d-3*(depth-140d3), 930-313*(1-exp(-depth/7d3)))
-!                 if (tmpr > solidus) then
-!                     ! fraction of partial melting
-!                     ! 10% of melting at solidus + 50 C
-!                     ! Hirschmann, 2000 G3.
-!                     pmelt = min((tmpr - solidus) / 50 * 0.1d0, 0.1d0)
-!                     fmelt(j,i) = pmelt * total_phase_ratio
-!                     !print *, j, i, tmpr, pmelt
-!                 endif
-!             endif
-!         enddo
-!     enddo
-!     !$OMP end parallel do
+                solidus = max(680+0.6d-3*(depth-140d3), 930-313*(1-exp(-depth/7d3)))
+                if (tmpr > solidus) then
+                    ! fraction of partial melting
+                    ! 10% of melting at solidus + 50 C
+                    ! Hirschmann, 2000 G3.
+                    pmelt = min((tmpr - solidus) / 50 * 0.1d0, 0.1d0)
+                    fmelt(j,i) = pmelt * total_phase_ratio
+                    !print *, j, i, tmpr, pmelt
+                endif
+            endif
+        enddo
+    enddo
+    !$OMP end parallel do
 
-!     !$OMP parallel do private(tmpr, yy, depth, solidus, pmelt, total_phase_ratio, press)
-!     !$ACC parallel loop collapse(2) async(1)
-!     do i = 1, nx-1
-!         do j = 1, nz-1
+    !$OMP parallel do private(tmpr, yy, depth, solidus, pmelt, total_phase_ratio, press)
+    !$ACC parallel loop collapse(2) async(1)
+    do i = 1, nx-1
+        do j = 1, nz-1
 
-!             ! basalt and eclogite rock melting
-!             ! solidus from Gutscher, 2000 Geology
-!             total_phase_ratio = phase_ratio(kocean1,j,i) + phase_ratio(kocean2,j,i) &
-!                                 + phase_ratio(kocean0,j,i) + phase_ratio(keclg,j,i)
-!             if (total_phase_ratio > 0.6d0 .and. cord(j,i,2) > -max_melting_depth) then
-!                 tmpr = 0.25d0 * (temp(j,i)+temp(j,i+1)+temp(j+1,i)+temp(j+1,i+1))
+            ! basalt and eclogite rock melting
+            ! solidus from Gutscher, 2000 Geology
+            total_phase_ratio = phase_ratio(kocean1,j,i) + phase_ratio(kocean2,j,i) &
+                                + phase_ratio(kocean0,j,i) + phase_ratio(keclg,j,i)
+            if (total_phase_ratio > 0.6d0 .and. cord(j,i,2) > -max_melting_depth) then
+                tmpr = 0.25d0 * (temp(j,i)+temp(j,i+1)+temp(j+1,i)+temp(j+1,i+1))
 
-!                 ! depth below the surface in m
-!                 yy = 0.25d0 * (cord(j,i,2)+cord(j,i+1,2)+cord(j+1,i,2)+cord(j+1,i+1,2))
-!                 depth = 0.5d0*(cord(1,i,2)+cord(1,i+1,2)) - yy
-!                 press = 3000*10*depth/1d9
+                ! depth below the surface in m
+                yy = 0.25d0 * (cord(j,i,2)+cord(j,i+1,2)+cord(j+1,i,2)+cord(j+1,i+1,2))
+                depth = 0.5d0*(cord(1,i,2)+cord(1,i+1,2)) - yy
+                press = 3000*10*depth/1d9
 
-!                 !shaded area from Gutscher, 2000 Geology
-!                 if (press < 1d0) then
-!                     solidus = 1050d0 - 420d0*(1d0 - exp(-press*3.3d0))
-!                 elseif (press > 2.7d0) then
-!                     solidus = (press + 14d0)*43d0
-!                 else
-!                     solidus=630d0 + 13d0*press**2
-!                 endif
+                !shaded area from Gutscher, 2000 Geology
+                if (press < 1d0) then
+                    solidus = 1050d0 - 420d0*(1d0 - exp(-press*3.3d0))
+                elseif (press > 2.7d0) then
+                    solidus = (press + 14d0)*43d0
+                else
+                    solidus=630d0 + 13d0*press**2
+                endif
 
-!                 if (tmpr > solidus) then
-!                     ! fraction of partial melting
-!                     ! XXX: assuming 10% of melting at solidus + 20 C
-!                     pmelt = min((tmpr - solidus) / 20 * 0.1d0, 0.1d0)
-!                     !$ACC atomic update
-!                     !$OMP atomic update
-!                     fmelt(j,i) = fmelt(j,i) + pmelt * total_phase_ratio
-!                 endif
-!             endif
-!         enddo
-!     enddo
-!     !$OMP end parallel do
+                if (tmpr > solidus) then
+                    ! fraction of partial melting
+                    ! XXX: assuming 10% of melting at solidus + 20 C
+                    pmelt = min((tmpr - solidus) / 20 * 0.1d0, 0.1d0)
+                    !$ACC atomic update
+                    !$OMP atomic update
+                    fmelt(j,i) = fmelt(j,i) + pmelt * total_phase_ratio
+                endif
+            endif
+        enddo
+    enddo
+    !$OMP end parallel do
 
-!     !$OMP parallel do private(tmpr, yy, depth, jj, solidus, pmelt)
-!     !$ACC parallel loop async(1)
-!     do i = 1, nx-1
-!         do j = nz-1, 1, -1
-!             ! flux melting in the mantel wedge occurs above serpertine or chlorite
-!             if (phase_ratio(kserp,j,i) + phase_ratio(khydmant,j,i) > 0.6d0 .and. &
-!                 cord(j,i,2) > -max_melting_depth) then
+    !$OMP parallel do private(tmpr, yy, depth, jj, solidus, pmelt)
+    !$ACC parallel loop async(1)
+    do i = 1, nx-1
+        do j = nz-1, 1, -1
+            ! flux melting in the mantel wedge occurs above serpertine or chlorite
+            if (phase_ratio(kserp,j,i) + phase_ratio(khydmant,j,i) > 0.6d0 .and. &
+                cord(j,i,2) > -max_melting_depth) then
 
-!                 ! search the mantle above for regions above solidus
-!                 do jj = j, 1, -1
-!                     tmpr = 0.25d0 * (temp(jj,i)+temp(jj,i+1)+temp(jj+1,i)+temp(jj+1,i+1))
+                ! search the mantle above for regions above solidus
+                do jj = j, 1, -1
+                    tmpr = 0.25d0 * (temp(jj,i)+temp(jj,i+1)+temp(jj+1,i)+temp(jj+1,i+1))
 
-!                     ! depth below the surface in m
-!                     yy = 0.25d0 * (cord(jj,i,2)+cord(jj,i+1,2)+cord(jj+1,i,2)+cord(jj+1,i+1,2))
-!                     depth = 0.5d0*(cord(1,i,2)+cord(1,i+1,2)) - yy
+                    ! depth below the surface in m
+                    yy = 0.25d0 * (cord(jj,i,2)+cord(jj,i+1,2)+cord(jj+1,i,2)+cord(jj+1,i+1,2))
+                    depth = 0.5d0*(cord(1,i,2)+cord(1,i+1,2)) - yy
 
-!                     ! Water-saturated solidus from Grove et al., Nature, 2009
-!                     if (depth > 80.d3) then
-!                         solidus = 800
-!                     else
-!                         solidus = 800 + 6.2e-8 * (depth - 80.d3)**2
-!                     endif
-!                     if (tmpr > solidus) then
-!                         ! fraction of partial melting
-!                         ! 10% of melting at solidus + 50 C
-!                         ! Hirschmann, 2000 G3.
-!                         pmelt = min((tmpr - solidus) / 50 * 0.1d0, 0.1d0)
-!                         !$ACC atomic update
-!                         !$OMP atomic update
-!                         fmelt(jj,i) = fmelt(jj,i) + pmelt * (phase_ratio(kmant1, jj, i)  &
-!                                                              + phase_ratio(kmant2, jj, i) &
-!                                                              + phase_ratio(kserp, jj, i))
-!                         !print *, jj, i, tmpr, pmelt
-!                     endif
-!                 enddo
-!                 ! no need to look up further
-!                 exit
-!             endif
-!         enddo
-!     enddo
-!     !$OMP end parallel do
-! endif
+                    ! Water-saturated solidus from Grove et al., Nature, 2009
+                    if (depth > 80.d3) then
+                        solidus = 800
+                    else
+                        solidus = 800 + 6.2e-8 * (depth - 80.d3)**2
+                    endif
+                    if (tmpr > solidus) then
+                        ! fraction of partial melting
+                        ! 10% of melting at solidus + 50 C
+                        ! Hirschmann, 2000 G3.
+                        pmelt = min((tmpr - solidus) / 50 * 0.1d0, 0.1d0)
+                        !$ACC atomic update
+                        !$OMP atomic update
+                        fmelt(jj,i) = fmelt(jj,i) + pmelt * (phase_ratio(kmant1, jj, i)  &
+                                                             + phase_ratio(kmant2, jj, i) &
+                                                             + phase_ratio(kserp, jj, i))
+                        !print *, jj, i, tmpr, pmelt
+                    endif
+                enddo
+                ! no need to look up further
+                exit
+            endif
+        enddo
+    enddo
+    !$OMP end parallel do
+endif
 
 return
 end subroutine change_phase
