@@ -44,6 +44,7 @@ do kk = 1 , nmarkers
     k = mod(n - 1, 2) + 1
     j = mod((n - k) / 2, nz-1) + 1
     i = (n - k) / 2 / (nz - 1) + 1
+
     ! interpolate y-coordinate and temperature on markers
     if (k .eq. 1) then
        yy = cord(j,i,2)*mark_a1(kk) + cord(j+1,i,2)*mark_a2(kk) + cord(j,i+1,2)*(1-mark_a1(kk)-mark_a2(kk))
@@ -56,17 +57,21 @@ do kk = 1 , nmarkers
     ! depth below the surface in m
     depth = 0.5d0*(cord(1,i,2)+cord(1,i+1,2)) - yy
     
-    ! Lithostatic pressure
-      press = 0.
-      rogh  = 0.
-      do jj = 1,j
-          densT= den(k) * (1.-alfa(k)*tmpr)
-          dh  = 0.5*(cord(jj,i,2)-cord(jj+1,i,2) + cord(jj,i+1,2)-cord(jj+1,i+1,2))
-          dPT = den(k) * (1.-alfa(k)*tmpr)*g*dh
-          dP = dPT*(1.-beta(k)*rogh)/(1.+beta(k)/2.*dPT)
-          press = rogh + 0.5*dP
-          rogh = rogh + dP
-    enddo
+    if (itype_melting.eq.2) then
+        ! Lithostatic pressure
+        press = 0.
+        rogh  = 0.
+        do jj = 1,j
+            densT= den(k) * (1.-alfa(k)*tmpr)
+            dh  = 0.5*(cord(jj,i,2)-cord(jj+1,i,2) + cord(jj,i+1,2)-cord(jj+1,i+1,2))
+            dPT = den(k) * (1.-alfa(k)*tmpr)*g*dh
+            dP = dPT*(1.-beta(k)*rogh)/(1.+beta(k)/2.*dPT)
+            press = rogh + 0.5*dP
+            rogh = rogh + dP
+        enddo
+    else
+        press = mantle_density * g * depth
+    endif
 
     ! # of markers inside quad
     kinc = nmark_elem(j,i)
@@ -86,6 +91,7 @@ do kk = 1 , nmarkers
         if(depth.le.20.e3) then
         if(tmpr >= 250. .and. tmpr <= 300. &
             .and. stressII(j,i)*strainII(j,i) > 1.e7) then   ! 1.e7
+            !$ACC atomic write
             !$OMP atomic write
             itmp(j,i) = 1
             mark_phase(kk) = kweakmc
@@ -96,55 +102,108 @@ do kk = 1 , nmarkers
             
     case (kmant1,kmant2)
         ! subuducted oceanic crust below mantle, mantle is serpentinized
-!        if(depth > max_basalt_depth) cycle
+        ! if(depth > max_basalt_depth) cycle
 
-        if (tmpr.le.serpentine_temp) then
-             if (aps(j,i).ge.0.1) then
-             !$OMP atomic write
-                 itmp(j,i) = 1
-                 mark_phase(kk) = kserp
-            endif
-         endif
-        if(ystime.gt.1.) then
-        if(tmpr.gt.800. .and. tmpr.lt.1000..and.stressII(j,i)*srateII(j,i).ge. 200.e-8) then
+        ! Phase diagram taken from Ulmer and Trommsdorff, Science, 1995
+        ! Fixed points (730 C, 2.1 GPa) (500 C, 7.5 GPa)
+        trpres = 2.1d9 + (7.5d9 - 2.1d9) * (tmpr - 730.d0) / (500.d0 - 730.d0)
+        ! Fixed points (730 C, 2.1 GPa) (670 C, 0.6 GPa)
+        trpres2 = 2.1d9 + (0.6d9 - 2.1d9) * (tmpr - 730.d0) / (670.d0 - 730.d0)
+        ! press = mantle_density * g * depth
+        if (.not. (press < trpres .and. press > trpres2)) cycle
+        do jbelow = min(j+1,nz-1), min(j+nelem_serp,nz-1)
+            if(phase_ratio(kocean1,jbelow,i) > 0.8d0 .or. &
+                phase_ratio(kocean2,jbelow,i) > 0.8d0 .or. &
+                phase_ratio(ksed1,jbelow,i) > 0.8d0) then
                 !$ACC atomic write
                 !$OMP atomic write
                 itmp(j,i) = 1
+                mark_phase(kk) = kserp
+                exit
+            endif
+        enddo
+
+        ! after 1 Myr, form mantle detachments
+        if(ystime.gt.1.) then
+        if(tmpr.gt.800. .and. tmpr.lt.1000. .and. &
+            stressII(j,i)*srateII(j,i).ge.200.e-8) then
+            !$ACC atomic write
+            !$OMP atomic write
+            itmp(j,i) = 1
             mark_phase(kk) = khtmsz 
         endif
         endif
-    case (kocean1,kocean2,kocean0,ksills)
+    case (kocean0, kocean1, kocean2, ksills)
         ! basalt -> eclogite
         ! phase change pressure
+        ! Phase Diagram taken from Hacker, JGR, 2003 (Figure 8 or Figure 1)
+        ! Fixed points (400 C, 5.1 GPa) (536 C, 0 GPa)
         trpres = -0.3d9 + 2.2d6*tmpr
         trpres2 = 20.1d9 - 0.0375d9*tmpr
-        press = -stressI( j, i)
-        if (tmpr < min_eclogite_temp .or. depth < min_eclogite_depth .or. press < trpres .or. press < trpres2) cycle
+        ! press = mantle_density * g * depth
+        if (tmpr < min_eclogite_temp .or. depth < min_eclogite_depth .or. &
+            press < trpres .or. press < trpres2) cycle
         !$ACC atomic write
         !$OMP atomic write
         itmp(j,i) = 1
         mark_phase(kk) = keclg
     case (kserp)
         ! dehydration, serpentinite -> hydrated mantle
-        ! Phase diagram taken from Ulmer and Trommsdorff, Nature, 1995
+        ! Phase diagram taken from Ulmer and Trommsdorff, Science, 1995
         ! Fixed points (730 C, 2.1 GPa) (500 C, 7.5 GPa)
         trpres = 2.1d9 + (7.5d9 - 2.1d9) * (tmpr - 730.d0) / (500.d0 - 730.d0)
         ! Fixed points (730 C, 2.1 GPa) (650 C, 0.2 GPa)
         trpres2 = 2.1d9 + (0.2d9 - 2.1d9) * (tmpr - 730.d0) / (650.d0 - 730.d0)
+        ! press = mantle_density * g * depth
         if (tmpr < serpentine_temp .or. (press < trpres .and. press > trpres2)) cycle
         !$ACC atomic write
         !$OMP atomic write
         itmp(j,i) = 1
         mark_phase(kk) = kmant1
-        
+    case (ksed2)
+        ! compaction, uncosolidated sediment -> sedimentary rock
+        if (tmpr < 80d0 .or. depth < 2d3) cycle
+        !$ACC atomic write
+        !$OMP atomic write
+        itmp(j,i) = 1
+        mark_phase(kk) = ksed1
+    case (ksed1)
+        ! sedimentary rock -> metamorphic sedimentary rock
+        if (tmpr < 250d0 .and. depth < 7d3) cycle
+        !$ACC atomic write
+        !$OMP atomic write
+        itmp(j,i) = 1
+        mark_phase(kk) = kmetased
+    case (kmetased)
+        ! dehydration, sedimentary rock -> schist
+        ! from metapelite KFMASH petrogenic grid,
+        ! invariant points i5 (710.8 C, 0.880 GPa) i3 (662.3 C, 0.704 GPa)
+        ! Fig 1, Wei, Powell, Clarke, J. Metamorph. Geol., 2004.
+        trpres = 0.88d9 - (0.88d9 - 0.704d9) * (710.8d0 - tmpr) / (710.8d0 - 662.3d0)
+        ! press = mantle_density * g * depth
+        if (press < trpres ) cycle
+        !$ACC atomic write
+        !$OMP atomic write
+        itmp(j,i) = 1
+        mark_phase(kk) = kschist
+    case (khydmant)
+        ! dehydration of chlorite
+        ! Phase diagram from Grove et al. Nature, 2009
+        trtmpr = 880 - 35d-9 * (depth - 62d3)**2
+        if (tmpr < trtmpr) cycle
+        !$ACC atomic write
+        !$OMP atomic write
+        itmp(j,i) = 1
+        mark_phase(kk) = kmant1        
     case (khtmsz)
-    if (tmpr.le.serpentine_temp) then
-             if (aps(j,i).ge.0.1) then
-                 !$OMP atomic write
-                 itmp(j,i) = 1
-                 mark_phase(kk) = kserp
-            endif
-         endif
+        if (tmpr.le.serpentine_temp) then
+        if (aps(j,i).ge.0.1) then
+            !$ACC atomic write
+            !$OMP atomic write
+            itmp(j,i) = 1
+            mark_phase(kk) = kserp
+        endif
+        endif
     end select
 
 enddo
