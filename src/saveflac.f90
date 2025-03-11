@@ -43,6 +43,11 @@ open (1,file='extr_acc.rs',access='direct',recl=(nx-1)*kindr)
 write (1,rec=nrec) extr_acc(1:nx-1)
 close (1)
 
+open (1,file='xlab.rs',access='direct',recl=nx*kindr)
+write (1,rec=nrec) xlab(1:nx)
+close (1)
+
+
 open (1,file='vel.rs',access='direct',recl=nwords*kindr) 
 write (1,rec=nrec) vel
 close (1)

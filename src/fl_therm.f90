@@ -321,16 +321,14 @@ do i = 1,nx-1
         temp(nz,i) = temp(nz-1,i)  +  bot_bc * ( cord(nz-1,i,2)-cord(nz,i,2) ) / Eff_conduct( nz-1, min(i,nx-1) )
     else if (itemp_bc.eq.3) then
         do j  = 1,nz-1
-        ! if(irestart.ne.1) then  
             if (Eff_melt(j,i).eq.0.) then
                 y = (cord(1,i,2)-cord(j,i,2))*1.e-3
-                
+            
                 if (y.gt.xlab(i)) then  ! xlab is 180 km
                     ! Asth Pot Temp - McKenBickle 1988 Eqn 5
                     temp(j,i) = bot_bc*exp(9.81*y*0.00004)
                 end if
             endif
-        !  endif
         enddo
     endif
 
