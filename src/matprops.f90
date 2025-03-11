@@ -28,7 +28,7 @@ else
     rogh  = 0.
     tmpr1= 0.
     do jj = 1,j
-        iph = iphase(j,i)
+        iph = iphase(jj,i)
         tmpr1 = 0.25*(temp(jj,i)+temp(jj+1,i)+temp(jj,i+1)+temp(jj+1,i+1))
         densT= den(iph) * (1.-alfa(iph)*tmpr1)
         dh1 = cord(jj,i,2)-cord(jj+1,i,2) 
@@ -241,11 +241,10 @@ if (itype_melting .ne. 2) then
     endif
 else
     ! Lithostatic pressure
-    iph = iphase(j,i)
     preslith = 0.
     rogh  = 0.
-    tmpr1= 0.
     do jj = 1,j
+        iph = iphase(jj,i)
         tmpr1 = 0.25*(temp(jj,i)+temp(jj+1,i)+temp(jj,i+1)+temp(jj+1,i+1))
         densT= den(iph) * (1.-alfa(iph)*tmpr1)
         dh1 = cord(jj,i,2)-cord(jj+1,i,2) 
