@@ -96,6 +96,16 @@ open (1,file='melt.rs',access='direct',recl=nwords*kindr)
 read (1,rec=nrec) Eff_melt
 close (1)
 
+!stored_intrusion
+open (1,file='stored_intru.rs',access='direct',recl=nwords*kindr)
+read (1,rec=nrec) stored_intrusion
+close (1)
+
+!dv_intr
+open (1,file='dv_intr.rs',access='direct',recl=nwords*kindr)
+read (1,rec=nrec) dv_intr
+close (1)
+
 ! Magma
 open (1,file='fmagma.rs',access='direct',recl=nwords*kindr)
 read (1,rec=nrec) fmagma
@@ -188,6 +198,21 @@ extrusion = 0
 fmelt = 0
 se2sr = 1d-16
 e2sr = 1d-16
+
+! MOR magma migration related
+zpressm = 0.
+new_intrusion = 0.
+av_intrusion = 0.
+icrust_melt = 1
+watercont = 0.000000 !wt fraction
+xmodalcpx = 0.03 !wt fraction
+xDF(1) = 0.0 !Initiatilize DF
+xDT(1) = 0.0 !Initialize DT
+dumC(1) = 0.0 !Runge Kutta
+dumC(2) = 0.5 !Runge Kutta
+dumC(3) = 0.5 !Runge Kutta
+dumC(4) = 1.0 !Runge Kutta
+istart_profile = 50
 
 call update_acc
 

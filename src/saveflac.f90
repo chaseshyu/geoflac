@@ -94,6 +94,16 @@ open (1,file='melt.rs',access='direct',recl=nwords*kindr)
 write (1,rec=nrec) Eff_melt
 close (1)
 
+!stored_intrusion
+open (1,file='stored_intru.rs',access='direct',recl=nwords*kindr) 
+write (1,rec=nrec) stored_intrusion
+close (1)
+
+!dv_intr
+open (1,file='dv_intr.rs',access='direct',recl=nwords*kindr) 
+write (1,rec=nrec) dv_intr
+close (1)
+
 ! Heat sources
 open (1,file='source.rs',access='direct',recl=nwords*kindr) 
 write (1,rec=nrec) source
