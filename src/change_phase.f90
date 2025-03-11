@@ -10,10 +10,10 @@ implicit none
 
 integer :: jj, j, i, iph, &
            jbelow, k, kinc, kk, n
-double precision, external :: stressI,stressII, strainII, srateII
+double precision, external :: stressI,stressII, strainII, srateII, xLith_dp
 double precision :: yy, depth, press, &
                     tmpr, trtmpr, trpres, trpres2, ystime,&
-                    solidus, pmelt, total_phase_ratio,rogh,dh,dPT,dP,densT
+                    solidus, pmelt, total_phase_ratio,rogh,dP
 
 ! max. depth (m) of eclogite phase transition, no serpentinization below it
 real*8, parameter :: max_basalt_depth = 150.d3
@@ -32,8 +32,22 @@ ystime = time/365./24./3600./1.e6
 itmp = 0  ! indicates which element has phase-changed markers
 !$ACC end kernels
 
-!$OMP parallel private(kk,i,j,k,n,tmpr,depth,iph,press,dh,rogh,dP,dPT, &
-!$OMP                    jbelow,trpres,trpres2,kinc,yy,densT)
+! Lithostatic pressure
+if (itype_melting.eq.2) then
+    !$OMP parallel do private(i,j,dP,rogh)
+    do i = 1, nx-1
+        dummye(:,i) = 0.
+        rogh = 0.
+        do j = 1, nz-1
+            dP = xLith_dp(j,i)
+            dummye(j,i) = rogh + 0.5*dP ! pressure at the middle of the element
+            rogh = rogh + dP
+        enddo
+    enddo
+endif
+
+!$OMP parallel private(kk,i,j,k,n,tmpr,depth,iph,press, &
+!$OMP                    jbelow,trpres,trpres2,kinc,yy)
 !$OMP do schedule(guided)
 !$ACC parallel loop async(1)
 do kk = 1 , nmarkers
@@ -59,16 +73,17 @@ do kk = 1 , nmarkers
     
     if (itype_melting.eq.2) then
         ! Lithostatic pressure
-        press = 0.
-        rogh  = 0.
-        do jj = 1,j
-            densT= den(k) * (1.-alfa(k)*tmpr)
-            dh  = 0.5*(cord(jj,i,2)-cord(jj+1,i,2) + cord(jj,i+1,2)-cord(jj+1,i+1,2))
-            dPT = den(k) * (1.-alfa(k)*tmpr)*g*dh
-            dP = dPT*(1.-beta(k)*rogh)/(1.+beta(k)/2.*dPT)
-            press = rogh + 0.5*dP
-            rogh = rogh + dP
-        enddo
+        press = dummye(j,i)
+        ! press = 0.
+        ! rogh  = 0.
+        ! do jj = 1,j
+        !     densT= den(k) * (1.-alfa(k)*tmpr)
+        !     dh  = 0.5*(cord(jj,i,2)-cord(jj+1,i,2) + cord(jj,i+1,2)-cord(jj+1,i+1,2))
+        !     dPT = den(k) * (1.-alfa(k)*tmpr)*g*dh
+        !     dP = dPT*(1.-beta(k)*rogh)/(1.+beta(k)/2.*dPT)
+        !     press = rogh + 0.5*dP
+        !     rogh = rogh + dP
+        ! enddo
     else
         press = mantle_density * g * depth
     endif

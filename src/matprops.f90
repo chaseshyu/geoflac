@@ -1,3 +1,22 @@
+!===============================================
+!   Lithostatic pressure
+function xLith_dp( j, i)
+use arrays
+use params
+use phases
+include 'precision.inc'
+
+iph = iphase(j,i)
+densT = Eff_dens(j,i)
+dh1 = cord (j,i,2) - cord (j+1,i,2)
+dh2 = cord (j,i+1,2) - cord (j+1,i+1,2)
+dh  = 0.5d0 * (dh1+dh2)
+dPT = densT * g * dh
+xLith_dp = dPT * ( 1 - beta(iph)*rogh ) / ( 1 + beta(iph)/2*dPT )
+
+return
+end function xLith_dp
+
 !==============================================
 ! Density
 function Eff_dens( j, i)
@@ -54,38 +73,58 @@ do k = 1, nphase
         dens = den(k) * ( 1 - alfa(k)*tmpr + beta(k)*press )
     else
         if (k == ksed1 .or. k == ksed2) then
+            if(k == ksed1) then
+                sed_min_density = 2200.
+                zefold = 6000.
+            else if(k == ksed2) then
+                sed_min_density = 2600.
+                zefold = 1500.
+            endif
+
             press = stressI(j,i)
+
+            delta_den = den(k) - sed_min_density
+
+            if (j==1 .and. cord(j,i,2)>0.) then
+                ! sediment above ground is already compacted
+                dens = den(k) * (1.-alfa(k)*tmpr)
+            else
+                ! sediment below sea level is uncompacted and less dense
+                dens = (den(k) - delta_den*exp((zcord-0.5*(cord(1,i,2)+cord(1,i+1,2)))/zefold)) &
+                        * ( 1 - alfa(k)*tmpr + beta(k)*press )
+            endif
+            if (dens < sed_min_density) dens = sed_min_density
         endif
 
-        if(k == ksed1) then
-            sed_min_density = 2200.
-            delta_den = den(k) - sed_min_density
-            zefold = 6000.
-            if (j==1 .and. cord(j,i,2)>0.) then
-                ! sediment above ground is already compacted
-                dens = den(k) * (1.-alfa(k)*tmpr)
-            else
-                ! sediment below sea level is uncompacted and less dense
-                dens = (den(k) - delta_den*exp((zcord-0.5*(cord(1,i,2)+cord(1,i+1,2)))/zefold)) &
-                        * ( 1 - alfa(k)*tmpr + beta(k)*press )
-            endif
-            if (dens < sed_min_density) dens = sed_min_density
-        endif
+        ! if(k == ksed1) then
+        !     sed_min_density = 2200.
+        !     delta_den = den(k) - sed_min_density
+        !     zefold = 6000.
+        !     if (j==1 .and. cord(j,i,2)>0.) then
+        !         ! sediment above ground is already compacted
+        !         dens = den(k) * (1.-alfa(k)*tmpr)
+        !     else
+        !         ! sediment below sea level is uncompacted and less dense
+        !         dens = (den(k) - delta_den*exp((zcord-0.5*(cord(1,i,2)+cord(1,i+1,2)))/zefold)) &
+        !                 * ( 1 - alfa(k)*tmpr + beta(k)*press )
+        !     endif
+        !     if (dens < sed_min_density) dens = sed_min_density
+        ! endif
         
-        if(k == ksed2) then
-            sed_min_density = 2600.
-            delta_den = den(k) - sed_min_density
-            zefold = 1500.
-            if (j==1 .and. cord(j,i,2)>0.) then
-                ! sediment above ground is already compacted
-                dens = den(k) * (1.-alfa(k)*tmpr)
-            else
-                ! sediment below sea level is uncompacted and less dense
-                dens = (den(k) - delta_den*exp((zcord-0.5*(cord(1,i,2)+cord(1,i+1,2)))/zefold)) &
-                        * ( 1 - alfa(k)*tmpr + beta(k)*press )
-            endif
-            if (dens < sed_min_density) dens = sed_min_density
-        endif
+        ! if(k == ksed2) then
+        !     sed_min_density = 2600.
+        !     delta_den = den(k) - sed_min_density
+        !     zefold = 1500.
+        !     if (j==1 .and. cord(j,i,2)>0.) then
+        !         ! sediment above ground is already compacted
+        !         dens = den(k) * (1.-alfa(k)*tmpr)
+        !     else
+        !         ! sediment below sea level is uncompacted and less dense
+        !         dens = (den(k) - delta_den*exp((zcord-0.5*(cord(1,i,2)+cord(1,i+1,2)))/zefold)) &
+        !                 * ( 1 - alfa(k)*tmpr + beta(k)*press )
+        !     endif
+        !     if (dens < sed_min_density) dens = sed_min_density
+        ! endif
 
         if ((xfmelt(j,i)  + Eff_melt(j,i)).gt.0.95) xfmelt(j,i) = 0.
 
