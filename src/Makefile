@@ -47,7 +47,7 @@ acc = 0
 coverage = 0
 gprof = 0
 nprof = 0
-cuda_path = /home/utig5/cshyu/nvidia/hpc_sdk/Linux_x86_64/25.1/cuda
+cuda_path = #/path/to/hpc_sdk/Linux_x86_64/25.1/cuda
 
 
 ########################################################################
