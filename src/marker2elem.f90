@@ -16,8 +16,9 @@ subroutine marker2elem
 
   ! Interpolate marker properties into elements
   ! Find the triangle in which each marker belongs
-
-  !$OMP parallel do private(kinc,r1,r2,x1,y1,x2,y2,xx,yy,inc,icount)
+  !$OMP parallel do collapse(2) schedule(static,1) default(none) &
+  !$OMP   private(i,j,kinc,inc,iseed,icount,x1,x2,y1,y2,xx,yy,r1,r2,kn,xdepth,testu) &
+  !$OMP   shared(nx,nz,cord,nmark_elem,iphase,phase_ratio,zpressm,zpresscounter,Emeltcounter,Eff_melt,nloop)
   !$ACC loop collapse(2) gang vector
   do i = 1 , nx-1
       do j = 1 , nz-1
@@ -49,7 +50,7 @@ subroutine marker2elem
               xx = x1*(1-r2) + x2*r2
               yy = y1*(1-r2) + y2*r2
 
-              call add_marker(xx, yy, iphase(j,i), zpressm(j,i), Eff_melt(j,i), 0.d0, j, i, inc)
+              call add_marker(xx, yy, iphase(j,i), zpressm(j,i), Eff_melt(j,i),0.d0, 0.d0, j, i, inc)
               icount = icount + 1
               if(icount > 100) stop 133
               if(inc.le.0) cycle
@@ -58,9 +59,12 @@ subroutine marker2elem
               zpresscounter(j,i) = zpresscounter(j,i) + zpressm(j,i)
               Emeltcounter(j,i) = Emeltcounter(j,i) + Eff_melt(j,i)
           enddo
+          ! Now atomically write the averaged values back into the shared arrays:
+        !  !$OMP ATOMIC WRITE
+        !   Eff_melt(j,i) = Emeltcounter(j,i) / dble(kinc)
 
-          Eff_melt(j,i) = Emeltcounter(j,i)/float(kinc)
-          zpressm(j,i) = zpresscounter(j,i)/float(kinc)
+          !$OMP ATOMIC WRITE
+           zpressm(j,i) = zpresscounter(j,i) / dble(kinc)
 
           call count_phase_ratio(j,i)
 
@@ -86,7 +90,7 @@ do i = 1, nx-1
         endif
     enddo
     jmoho(i) = mohod
-    if (jmoho(i).le.8) jmoho(i) = 8
+    if (jmoho(i).eq.1) jmoho(i) = 8 ! There are only mantle phases,avoid shutting down the intrusin+extrusion 
 enddo
 
 if (nloop .ne. 0 .and. itype_melting.eq.2) call check_camber

@@ -118,6 +118,9 @@ endif
 ! Interpolate accumulated melt for melt_prod
 call rem_interpolate( nzt, nxt, dummye, Eff_melt )
 
+! Interpolate extractted melt for melt_prod
+call rem_interpolate( nzt, nxt, dummye, Melt_extract )
+
 ! Interpolate stored melt
 call rem_interpolate( nzt, nxt, dummye, stored_intrusion )
 

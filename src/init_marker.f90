@@ -16,7 +16,7 @@ double precision :: ddx, ddy, dx, dy, r, rx, ry, xx, &
 Emeltcounter(:,:) = 0.
 zpresscounter(:,:) = 0.
                     
-mark_id_elem = 0
+mark_id_elem = 1
 nmark_elem = 0
 
 ! define euler coordinate of the markers
@@ -123,7 +123,7 @@ do i = 1 , nx-1
                 end do
                 kph = iph_col(n,m)
             enddo
-            call add_marker(xx, yy, kph,zpressm(j,i),0.d0, 0.d0, j, i, inc)
+            call add_marker(xx, yy, kph,zpressm(j,i),0.d0, 0.d0,0.d0,  j, i, inc)
             !call add_marker(xx, yy, iphase(j,i), 0.d0, j, i, inc)
             if(inc.le.0) cycle
 

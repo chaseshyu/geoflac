@@ -9,7 +9,7 @@ include 'precision.inc'
 character*200 msg
 
 !$ACC kernels async(1)
-mark_id_elem(:,:,:) = 0
+mark_id_elem(:,:,:) = 1
 nmark_elem(:,:) = 0
 Emeltcounter(:,:) = 0.
 zpresscounter(:,:) = 0.

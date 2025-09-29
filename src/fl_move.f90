@@ -173,7 +173,7 @@ subroutine check_camber
     use phases
     implicit none
     double precision :: critmeltfrac(nz-1,nx-1), tmpr, critmelt, testa
-    integer :: i,j,k,ibug,imagcolumn(nx-1),jmagcolumn(nx-1),jmagtop,magtopcount,imag_min,imag_max, knn
+    integer :: i,j,k,ibug,imagcolumn(nx-1),jmagcolumn(nx-1),magtopcount,imag_min,imag_max, knn
 
 
     imagtop = int((nx-1)/2)
@@ -261,9 +261,9 @@ implicit none
 
 double precision, external :: dlmin_prop
 double precision :: totalmelt, totalarea, dh(nx)
-double precision :: mor_extrusion_rate, mor_dike_rate, pi, dlmin
+double precision :: mor_extrusion_rate, mor_dike_rate, pi, dlmin,depthtm
 double precision :: control_vol_ch, vc_rate, xintr, xmu, xsigma
-double precision :: unit_xmelt_migrated, xl_vol, quad_area, xdike_migrated
+double precision :: unit_xmelt_migrated, xl_vol, quad_area, xdike_migrated,tmpr
 double precision :: extru_limit, intru_limit, total_extru_strain, tmp, extru_melt
 integer :: i, j, ii, jj, kinc, n_to_add, kk, ihalfwidth_mzone
 integer :: iextru_start, iextru_end, nintru, iintru_bot
@@ -273,18 +273,24 @@ dlmin = dlmin_prop()
 av_intrusion = 0.
 new_intrusion = 0.
 ii = imagtop
-totalmelt = 0.
+!totalmelt = 0.
 totalarea = 0.
-
+!mtrack = 0.
 mor_extrusion_rate = 1.d0 - ratio_crust_mzone - ratio_mantle_mzone
 mor_dike_rate = ratio_crust_mzone
+! first Depth at which the melt can start to migrate (60 km)
+depthtm = abs(0.5*(cord(jmagtop+1,ii,2)+cord(jmagtop,ii,2))/1000.)
+if (depthtm.ge.60.) then!
+     mor_extrusion_rate = 0.
+     mor_dike_rate = 0.
+endif
 
-iintru_bot = jmoho(ii) - 5
+iintru_bot = jmoho(ii) - 1
 nintru = iintru_bot - ibasement + 1
 
-ihalfwidth_mzone = int(width_mzone / 2 / dxmin)
-iextru_start = max(1,ii-2*ihalfwidth_mzone)
-iextru_end = min(nx-1,ii+2*ihalfwidth_mzone)
+ihalfwidth_mzone = int(width_mzone / 4/dxmin)
+iextru_start = max(1,ii-ihalfwidth_mzone)
+iextru_end = min(nx-1,ii+ihalfwidth_mzone)
 
 !$OMP parallel do private(i,j) collapse(2)
 do i = 1, nx-1
@@ -294,14 +300,18 @@ do i = 1, nx-1
 enddo
 
 ! volume of the melt in this column
-!$OMP parallel do private(i,j,quad_area) reduction(+:totalmelt,totalarea) collapse(2)
+!$OMP parallel do private(i,j,quad_area,tmpr) reduction(+:totalmelt,totalarea) collapse(2)
 do i = iextru_start, iextru_end
     do j = 1, nz-1
-        if (Eff_melt(j,i).gt.0.0) then ! only the melt accumulated
+        tmpr = 0.25*(temp(j,i)+temp(j+1,i)+temp(j,i+1)+temp(j+1,i+1))
+        if (Eff_melt(j,i).gt.0.0.and.tmpr.gt.1100.) then ! only the melt accumulated that is not recrystallized
             quad_area = dummye(j,i)
             totalarea = totalarea + quad_area
             if (fmelt(j,i).gt.0. .and. Eff_melt(j,i).gt.0.03) then  ! only the melt produced that can move
                 totalmelt = totalmelt + quad_area * fmelt(j,i)
+              !  if (time_init.eq.time) then
+              !  total_init_melt = total_init_melt + quad_area*Eff_melt(j,i)
+              !  endif
             endif
         endif
     enddo
@@ -314,9 +324,9 @@ pi = sqrt(2.*3.14159265358979323846)
 ! we impose a max of 2 particles per element for the volume change
 ! We use the same width has where the melt is collected
 
-intru_limit = 1.*2.*vbc*dlmin ! per element
+intru_limit = 2*vbc*dlmin ! per element
 ! 1/4 of the total volume of intrusion
-extru_limit = nintru * intru_limit * mor_extrusion_rate / mor_dike_rate
+extru_limit = 4.*nintru * intru_limit * mor_extrusion_rate / mor_dike_rate
 
 ! REVISE  Need to be able to inject in more elements laterally
 ! Volcanic flow rate ? From sesismic 1e-6 m^2/s  500 km^2/4 myr
@@ -335,6 +345,7 @@ endif
 
 xintr = total_extru_strain
 xsigma = dfloat(ihalfwidth_mzone/2)
+extru_melt = xintr*quad_area
 ! Distribute average intrusion on a normal distribution
 !$OMP parallel do private(i,xmu,tmp)
 do i = iextru_start, iextru_end
@@ -360,14 +371,16 @@ do i = iextru_start, iextru_end
     !$OMP atomic update
     dh(i+1) = dh(i+1) + extrusion(i)
 enddo
-
+! Ration of melt rmoved from totalmelt
+totalmelt = totalmelt - extru_melt
 ! Ratio of amount of melt removed the mantle per asthenosphere element
 unit_xmelt_migrated = total_extru_strain / totalarea
 ! Remove this melt on average from the asthenosphere
-!$OMP parallel do private(i,j) collapse(2)
+!$OMP parallel do private(i,j,tmpr) collapse(2)
 do j = 1,nz-1
     do i = 1,nx-1
-        if (Eff_melt(j,i).ge.0.03) then
+        tmpr = 0.25*(temp(j,i)+temp(j+1,i)+temp(j,i+1)+temp(j+1,i+1))
+        if (Eff_melt(j,i).ge.0.02.and.tmpr.gt.1100.) then
             Eff_melt(j,i) = Eff_melt(j,i) - unit_xmelt_migrated * dummye(j,i)
         endif
     enddo
@@ -402,6 +415,12 @@ enddo
 
 xintr = mor_dike_rate * totalmelt / nintru
 control_vol_ch = intru_limit * dt  ! in m^2
+!control_time = 1.e6*365*24.*3600. ! time of migrationof init volume in  seconds tanh(1000yrs/control_time) ~ 1 all melt is migrated?
+! calculate the change in velocity boundary condions.
+! the initial volume need to release progressively over millions of years.
+! create a variable melt_volume_init
+      
+  !  vbc_rate = 0.5*(mor_dike_rate*totalmelt)/(nz*dlmin)/dt
 
 !$OMP parallel do private(jj,quad_area,vc_rate)
 do jj = ibasement, iintru_bot
@@ -412,7 +431,7 @@ do jj = ibasement, iintru_bot
         stored_intrusion(jj,ii) = stored_intrusion(jj,ii) + av_intrusion(jj,ii) - control_vol_ch  ! in m^2
         new_intrusion(jj,ii) = control_vol_ch / quad_area ! in volumic strain
         fmagma(jj,ii) = fmagma(jj,ii) + control_vol_ch / quad_area ! in volumic strain
-        dv_intr(jj,ii) = dv_intr(jj,ii)+ control_vol_ch ! in m^2
+        dv_intr(jj,ii) = dv_intr(jj,ii) + control_vol_ch ! in m^2
     else
         new_intrusion(jj,ii) = (av_intrusion(jj,ii) + stored_intrusion(jj,ii)) / quad_area ! in volumic strain
         stored_intrusion(jj,ii) = 0.
@@ -420,23 +439,23 @@ do jj = ibasement, iintru_bot
         dv_intr(jj,ii) = dv_intr(jj,ii) + av_intrusion(jj,ii) * quad_area ! in m^2
     endif
 enddo
-
+xintr = 0.
 xdike_migrated = 0.
 ! Calculate the amount of melt intruded
 !$OMP parallel do private(jj) reduction(+:xdike_migrated)
 do jj = ibasement, iintru_bot
     xdike_migrated = xdike_migrated + new_intrusion(jj,ii)
+    xintr = xintr + dv_intr(jj,ii) 
 enddo
-
-!$OMP parallel do private(i,j) collapse(2)
+!$OMP parallel do private(i,j,tmpr) collapse(2)
 do j = 1,nz-1
     do i = 1,nx-1
-        if (Eff_melt(j,i).ge.0.03) then
+        if (Eff_melt(j,i).ge.0.02.and.tmpr.gt.1100.) then
+        tmpr = 0.25*(temp(j,i)+temp(j+1,i)+temp(j,i+1)+temp(j+1,i+1))
             Eff_melt(j,i) = Eff_melt(j,i) - xdike_migrated * dummye(j,i) / totalarea
         endif
     enddo
 enddo
-
 ! add basalt in intruded element
 !$OMP parallel do private(i,jj,kinc,xl_vol,quad_area,n_to_add,kk) collapse(2)
 do i = ii-3, ii+3
@@ -451,6 +470,7 @@ do i = ii-3, ii+3
                 call add_marker_dike(jj,i, 1d0, time, nloop+i+kk, kmafic)
             enddo
             dv_intr(jj,i) = 0.
+            totalmelt = totalmelt  - xintr 
 
             ! recalculate phase ratio
             call count_phase_ratio(jj,i)
@@ -517,7 +537,13 @@ if( topo_kappa .gt. 0.d0 ) then
 
     !$ACC parallel loop async(2)
     do i = 1, nx
-        stmpn(i) = topo_kappa ! elevation-dep. topo diffusivity
+        if (-cord(1,i,2).le.1000.) then
+        stmpn(i) = 10.**(-5-3.e-3*(-cord(1,i,2))) !topo_kappa ! elevation-dep. topo diffusivity
+        endif
+        if (-cord(1,i,2).le.0.) then
+        stmpn(i) = 1.e-5
+       endif
+       if (-cord(1,i,2).gt.1000.) stmpn(i)=1.e-8
     enddo
 
     topomean = 0
@@ -778,7 +804,7 @@ do while(.true.)
     xx = x1*(1-r2) + x2*r2
     yy = y1*(1-r2) + y2*r2
 
-    call add_marker(xx, yy, kph, zpressm(j,i), Eff_melt(j,i), time, 1, i, inc)
+    call add_marker(xx, yy, kph, zpressm(j,i), Eff_melt(j,i),0.d0, time, 1, i, inc)
     if(inc==1 .or. inc==-1) exit
     icount = icount + 1
     if(icount > 100) stop 134
@@ -823,7 +849,7 @@ do while(.true.)
     xx = x1*(1-r2) + x2*r2
     yy = y1*(1-r2) + y2*r2
 
-    call add_marker(xx, yy, kph, zpressm(j,i), Eff_melt(j,i), time, j, i, inc)
+    call add_marker(xx, yy, kph, zpressm(j,i), Eff_melt(j,i),0.d0, time, j, i, inc)
     if(inc==1 .or. inc==-1) exit
     icount = icount + 1
     write(*,*) inc,icount

@@ -26,6 +26,7 @@ se2sr = 1d-16
 ! MOR magma migration related
 zpressm = 0.
 Eff_melt = 0.
+Melt_extract = 0.
 new_intrusion = 0.
 av_intrusion = 0.
 stored_intrusion = 0.
@@ -44,12 +45,8 @@ strain = 0
 
 watercont = 0.000000 !wt fraction
 xmodalcpx = 0.03 !wt fraction
-xDF(1) = 0.0 !Initiatilize DF
-xDT(1) = 0.0 !Initialize DT
-dumC(1) = 0.0 !Runge Kutta
-dumC(2) = 0.5 !Runge Kutta
-dumC(3) = 0.5 !Runge Kutta
-dumC(4) = 1.0 !Runge Kutta
+xDF = 0.0 !Initiatilize DF
+xDT = 0.0 !Initialize DT
 istart_profile = 50
 
 

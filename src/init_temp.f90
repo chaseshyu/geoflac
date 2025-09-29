@@ -134,7 +134,7 @@ if (itype_melting .eq. 2) then
     pi = 3.14159
     diffusivity = 1.e-6
 
-    shf = 70.
+    shf = 60.
     huc = 6.
     hlc = 2.
     ixtb1_new = 1
@@ -146,8 +146,8 @@ if (itype_melting .eq. 2) then
         ainitdepth = 0.
         F = 0.74 ! Partition coefficient
 
-        alc = 0.4e-6 ! LowerCrust HG
-        am = 0.02e-6 ! Mantle HG
+        alc = 0.0e-6 ! LowerCrust HG
+        am = 0.00e-6 ! Mantle HG
         do j = 1,nz-1
             if (i.lt.nx) then
                 xc = 0.25*(cord (j,i  ,1) + cord(j+1,i  ,1) + &
@@ -155,7 +155,7 @@ if (itype_melting .eq. 2) then
                 yc = 0.25*(cord (j,i  ,2) + cord(j+1,i  ,2) + &
                         cord (j,i+1,2) + cord(j+1,i+1,2))
             endif
-            xsfh  = shf + 20.*exp(-((xc-g_x0)/g_width)**2.)
+            xsfh  = shf + 5.*exp(-((xc-g_x0)/g_width)**2.)
             auc = (1. - F)*xsfh*1.e-3/(huc*1000.) ! UpperCrust heat generation
             ! Bootstrap through temps w depth
             temp(1,i) = t_top 

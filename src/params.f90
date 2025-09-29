@@ -37,7 +37,7 @@ integer :: nx,nz,nzonx,nzony,nelz_x(maxzone),nelz_y(maxzone), &
      nloop,ifreq_avgsr,nsrate, &
      ! magma migration related
      isolidus,ix1t,ix2t,iy1t,iy2t,igeotherm,icrust_melt,istart_profile,imagtop, &
-     ibasement
+     jmagtop,ibasement
 
 !$ACC declare create(nx,nz,nzonx,nzony,nelz_x(maxzone),nelz_y(maxzone), &
 !$ACC     ny_rem,mode_rem,ntest_rem,ivis_shape, &
@@ -63,7 +63,7 @@ integer :: nx,nz,nzonx,nzony,nelz_x(maxzone),nelz_y(maxzone), &
 !$ACC     ivis_present,idt_scale,ifreq_imasses,ifreq_rmasses, &
 !$ACC     nloop,ifreq_avgsr,nsrate, &
 !$ACC     isolidus,ix1t,ix2t,iy1t,iy2t,igeotherm,icrust_melt,imagtop, &
-!$ACC     ibasement)
+!$ACC     jamgtop,ibasement)
 
 real*8 :: x0,z0,rxbo,rzbo,sizez_x(maxzone),sizez_y(maxzone), &
      dx_rem,angle_rem,topo_kappa,fac_kappa, &
@@ -95,7 +95,7 @@ real*8 :: x0,z0,rxbo,rzbo,sizez_x(maxzone),sizez_y(maxzone), &
      time,dt,time_max, &
      ! magma migration related
      temp_per,g_x0,g_y0c,g_amplitude,g_width,width_mzone,ratio_crust_mzone, &
-     watercont,xmodalcpx,dumC(4),xDF(4),xDT(4)
+     watercont,xmodalcpx,vbc_rate
 
 !$ACC declare create(x0,z0,rxbo,rzbo,sizez_x(maxzone),sizez_y(maxzone), &
 !$ACC     dx_rem,angle_rem,topo_kappa,fac_kappa, &
@@ -126,7 +126,7 @@ real*8 :: x0,z0,rxbo,rzbo,sizez_x(maxzone),sizez_y(maxzone), &
 !$ACC     dtavg, &
 !$ACC     time,dt,time_max, &
 !$ACC     temp_per,g_x0,g_y0c,g_amplitude,g_width,width_mzone,ratio_crust_mzone, &
-!$ACC     watercont,xmodalcpx,dumC(4),xDF(4),xDT(4))
+!$ACC     watercont,xmodalcpx,vbc_rate
 
 character phasefile*20,tempfile*20,coordfile*20
 

@@ -7,7 +7,7 @@ module arrays
 
   ! fortran array allocatable
   double precision, allocatable:: cord(:,:,:), temp(:,:), vel(:,:,:), stress0(:,:,:,:), &
-       force(:,:,:), amass(:,:), rmass(:,:), &
+       stressI_val(:,:),force(:,:,:), amass(:,:), rmass(:,:), &
        area(:,:,:), dvol(:,:,:), strain(:,:,:), bc(:,:,:)
 
   integer, allocatable :: ncod(:,:,:), iphase(:,:), &
@@ -22,7 +22,7 @@ module arrays
       bcstress(:,:), &
       ! magma migration related
       xlab(:),tsol(:,:),tliq(:,:),tliquc(:,:),tsoluc(:,:),tsollc(:,:),tliqlc(:,:), &
-      avT(:,:),Eff_melt(:,:), zpressm(:,:),deltaTLH(:,:), &
+      avT(:,:),Eff_melt(:,:), Melt_extract(:,:),zpressm(:,:),deltaTLH(:,:), &
       Emeltcounter(:,:),zpresscounter(:,:), xfmelt(:,:), &
       new_intrusion(:,:), av_intrusion(:,:), stored_intrusion(:,:), dv_intr(:,:)
 
@@ -50,6 +50,7 @@ contains
     allocate(temp(nz, nx))
     allocate(vel(nz, nx, 2))
     allocate(stress0(nz-1, nx-1, 4, ntri))
+    allocate(stressI_val(nz-1,nx-1))
     allocate(force(nz, nx, 2))
     allocate(amass(nz, nx))
     allocate(rmass(nz, nx))
@@ -98,6 +99,7 @@ contains
 
     ! magma migration related
     allocate(Eff_melt(nz-1,nx-1))
+    allocate(Melt_extract(nz-1,nx-1))
     allocate(avT(nz-1, nx-1))
     allocate(xlab(nx))
     allocate(zpressm(nz-1,nx-1))

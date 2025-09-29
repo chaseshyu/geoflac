@@ -130,7 +130,7 @@ nrec = nrec + 1
 close (1)
 
 ! recount marker phase
-mark_id_elem(:,:,:) = 0
+mark_id_elem(:,:,:) = 1
 nmark_elem(:,:) = 0
 print *, '# of markers:', nmarkers
 do n = 1, nmarkers

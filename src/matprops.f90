@@ -5,6 +5,7 @@ function Eff_dens( j, i)
 use arrays
 use params
 use phases
+use marker_data
 include 'precision.inc'
 
 zcord = 0.25d0*(cord(j,i,2)+cord(j+1,i,2)+cord(j,i+1,2)+cord(j+1,i+1,2))
@@ -80,6 +81,9 @@ do k = 1, nphase
     if ((xfmelt(j,i)  + Eff_melt(j,i)).gt.0.95) xfmelt(j,i) = 0.
 
     dens = dens * ( 1.- (xfmelt(j,i)  + Eff_melt(j,i))) + 2900.*(xfmelt(j,i)  + Eff_melt(j,i))
+    if (k.eq.kmeltlc) then
+        dens  = dens * (1. - mark_Fcrust(k)) + 2550.*mark_Fcrust(k)  
+    endif
 
     Eff_dens = Eff_dens + ratio*dens
 
@@ -220,34 +224,37 @@ do k = 1, nphase
         xxgz = 15.*0.25*(stressII(j,i)/1.e6)**(-4./3.)
         vis=(0.75*7.7e-2)**(-1.)*(xxgz**(2.))*exp(290.e3/r/(tmpr+273.))*1.e6
     endif
-    if (k.eq.7.or.k.eq.1) then
-        xlava_age = 0.
+    !if (k.eq.7.or.k.eq.1) then
+      !  xlava_age = 0.
         ! Lava flow at the surface must harden over the heat diffusion time scale L=1000 m, diff = 1e-6 m^2s-1
         ! Td cooling lava over 1 km (element size) is 1e6/1e-6 = 1e12 s.
-        Tcool = 1.e12
+      !  Tcool = 1.e12
         ! we assume the lava flow arrive at a temperature of ~1000 C (it is more like 1250 C in lava tubes)
         ! The initial viscosity is vis_1000 which decays exponentially since its formation xlava_age:
-        kinc = nmark_elem(1,i) ! number of marker in element 
-        nl = 0  ! counts the lava markers
-        do n = 1,kinc
-            kid = mark_id_elem(n,j,i)
-            if (mark_phase(kid).eq.7) then
-            nl = nl + 1
-            xlava_age = xlava_age + mark_age(kid)
-            endif
-        enddo
+      !  kinc = nmark_elem(1,i) ! number of marker in element 
+      !  nl = 0  ! counts the lava markers
+      !  do n = 1,kinc
+      !      kid = mark_id_elem(n,j,i)
+      !      if (mark_phase(kid).eq.7) then
+      !      nl = nl + 1
+      !      xlava_age = xlava_age + mark_age(kid)
+      !      endif
+      !  enddo
         ! age since extrusion
-        xlava_age = xlava_age/nl
+      !  xlava_age = xlava_age/nl
         !  if (tmpr.gt.1000.) tmpr = 1000. ! Make sure we are cooling off
-        T_lava = max(1200.*exp(-xlava_age/Tcool),tmpr) 
-        vis = 0.25*srat**pow*(0.75*acoef(k))**pow1* &
-        exp((eactiv(k)+27.e-6*preslith)/(pln(k)*r*(T_lava+273.)))*1.e+6
-    endif
-        
+     !   T_lava = max(1200.*exp(-xlava_age/Tcool),tmpr) 
+     !   vis = 0.25*srat**pow*(0.75*acoef(k))**pow1* &
+     !   exp((eactiv(k)+27.e-6*preslith)/(pln(k)*r*(T_lava+273.)))*1.e+6
+    !endif
+
 
     if (xfmelt(j,i)+Eff_melt(j,i).gt.0.5) xfmelt(j,i) = 0.
 
     vis = vis*dexp(-30.*(xfmelt(j,i)+Eff_melt(j,i))) 
+    if (k.eq.kmeltlc) then
+        vis = vis*dexp(-10.*mark_Fcrust(k)) 
+    endif
 
     ! Final cut-off
     if (vis .lt. v_min) vis = v_min

@@ -17,7 +17,7 @@ double precision :: s11p(4),s22p(4),s12p(4),s33p(4),s11v(4),s22v(4),s12v(4),s33v
 double precision :: bulkm,rmu,coh,phi,psi, &
                     stherm,hardn,vis, &
                     de11,de22,de12,de33,dv,dv1p, &
-                    diss, poiss, &
+                    diss, poiss,s11, s22, s33, &
                     quad_area, s0, s0a,s0b, &
                     sII_plas, sII_visc, young
 double precision :: Eff_visc
@@ -29,7 +29,7 @@ integer :: i, j, k, iph, irh, &
 !$OMP                  stherm,hardn,vis, &
 !$OMP                  de11,de22,de12,de33,dv,dv1p, &
 !$OMP                  s11p,s22p,s12p,s33p, &
-!$OMP                  s11v,s22v,s12v,s33v, &
+!$OMP                  s11v,s22v,s12v,s33v,s11,s22,s33,  &
 !$OMP                  depl,ipls,diss, &
 !$OMP                  sII_plas,sII_visc, &
 !$OMP                  quad_area,s0a,s0b,s0)
@@ -192,7 +192,11 @@ do i = 1,nx-1
         strain(j,i,1) = strain(j,i,1) + 0.25d0*dt*(strainr(1,1,j,i)+strainr(1,2,j,i)+strainr(1,3,j,i)+strainr(1,4,j,i))
         strain(j,i,2) = strain(j,i,2) + 0.25d0*dt*(strainr(2,1,j,i)+strainr(2,2,j,i)+strainr(2,3,j,i)+strainr(2,4,j,i))
         strain(j,i,3) = strain(j,i,3) + 0.25d0*dt*(strainr(3,1,j,i)+strainr(3,2,j,i)+strainr(3,3,j,i)+strainr(3,4,j,i))
-
+        ! First invariant values
+        s11 = 0.25d0 * (stress0(j,i,1,1)+stress0(j,i,1,2)+stress0(j,i,1,3)+stress0(j,i,1,4))
+        s22 = 0.25d0 * (stress0(j,i,2,1)+stress0(j,i,2,2)+stress0(j,i,2,3)+stress0(j,i,2,4))
+        s33 = 0.25d0 * (stress0(j,i,4,1)+stress0(j,i,4,2)+stress0(j,i,4,3)+stress0(j,i,4,4))
+        stressI_val(j,i) = (s11+s22+s33)/3d0 
     enddo
 enddo
 !$OMP end do

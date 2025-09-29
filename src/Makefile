@@ -13,7 +13,17 @@
 ## coverage = 1: enable code coverage analysis (used for debugging)
 ## gprof = 1: enable profiling (used for tuning optimization)
 
-
+#FC       = 
+#FFLAGS   = -O2 -cpp        # Enable Fortran preprocessing
+#CPPFLAGS =
+# NVTX support: define USE_NVTX=1 on the command line to enable
+#ifeq ($(USE_NVTX),1)
+#  CPPFLAGS += -DUSE_NVTX
+#  $(info NVTX support enabled)
+#endif
+# Rule to compile .f90 files with preprocessing flags
+#%.o: %.f90
+#	$(FC) $(FFLAGS) $(CPPFLAGS) -c $< -o $@
 ########################################################################
 ## Select default fortran 90 compiler
 ########################################################################
@@ -36,7 +46,12 @@ F90 = gfortran
 ########################################################################
 CFLAGS = -g
 LDFLAGS =
-
+### === after your existing FFLAGS, OMPFLAGS, etc. ===
+#———————————————————————————————————————————————————
+# ThreadSanitizer build flags
+#TSAN_FFLAGS   = -fopenmp -O1 -g -fsanitize=thread
+#TSAN_LDFLAGS  = $(TSAN_FFLAGS)
+#———————————————————————————————————————————————————
 
 ########################################################################
 ## default command line options
@@ -71,8 +86,8 @@ ifeq ($(F90), gfortran)
 	ifeq ($(debug), 0)
 		CFLAGS += -O2
 	else
-		CFLAGS += -O0 -Wall -fbounds-check -ftrapv -fbacktrace -fdump-core \
-			-Waliasing -Walign-commons -Wampersand -Wintrinsic-shadow \
+		CFLAGS += -O0 -g -fcheck=all -Wall -fbounds-check -ftrapv -fbacktrace -fdump-core \
+			-finit-real=nan -finit-integer=-999 -Waliasing -Walign-commons -Wampersand -Wintrinsic-shadow \
 			-Wline-truncation -Wsurprising -Wunderflow \
 			-frange-check -Werror -Wno-unused-variable
 	endif
@@ -234,7 +249,7 @@ endif
 ########################################################################
 
 .PHONY: all clean clean-data take-snapshot
-
+#.PHONY: tsan
 all: $(EXE) take-snapshot
 
 $(EXE): $(MODULE_OBJS) $(OBJS) $(OBJS2)
@@ -289,3 +304,11 @@ clean:
 
 clean-data:
 	@rm -f *.0 *.rs sys.msg marker_init.asc vbc.s area.dat output.asc temp0.dat
+#———————————————————————————————————————————————————
+# Build with ThreadSanitizer instrumentation
+#.PHONY: tsan
+#tsan: clean
+#	@echo ">>> Building with ThreadSanitizer instrumentation <<<"
+#	$(MAKE) CFLAGS="$(TSAN_FFLAGS)" LDFLAGS="$(TSAN_LDFLAGS)"
+#	@echo ">>> Run with: OMP_NUM_THREADS=4 ./$(EXE) <<<"
+#———————————————————————————————————————————————————

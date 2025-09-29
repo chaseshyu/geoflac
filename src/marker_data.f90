@@ -9,7 +9,8 @@ MODULE marker_data
   double precision, allocatable :: mark_x(:), mark_y(:)   ! Euler coordinates
   double precision, allocatable :: mark_age(:)            ! creation time
   double precision, allocatable :: mark_zpressn(:)        ! normal pressure
-  double precision, allocatable :: mark_Emeltm(:)         ! melt
+  double precision, allocatable :: mark_Emeltm(:)         ! melt fraction
+  double precision, allocatable :: mark_Fcrust(:)         ! crustalmelt fraction
   integer, allocatable :: mark_dead(:)
   integer, allocatable :: mark_ntriag(:)      ! number of FE-triangle
   integer, allocatable :: mark_phase(:)
@@ -35,14 +36,15 @@ MODULE marker_data
              mark_phase(max_markers), &
              mark_ID(max_markers), &
              mark_zpressn(max_markers), &
-             mark_Emeltm(max_markers))
+             mark_Emeltm(max_markers), &
+             mark_Fcrust(max_markers))
 
     allocate(mark_id_elem(max_markers_per_elem, nz-1, nx-1))
     allocate(nmark_elem(nz-1, nx-1))
 
   end subroutine
 
-  subroutine add_marker(x, y, iph, xxpres, xxmelt, age, j, i, inc)
+  subroutine add_marker(x, y, iph, xxpres, xxmelt, xcmelt, age, j, i, inc)
     !$ACC routine seq
     !$ACC routine(check_inside) seq
     ! Add a marker at physical coordinate (x, y), with phase iph and age, to
@@ -55,7 +57,7 @@ MODULE marker_data
     use params
     implicit none
     integer :: iph, j, i, inc
-    double precision :: x, y, age, xxpres, xxmelt
+    double precision :: x, y, age, xxpres, xxmelt,xcmelt
     integer :: ntr, kk, nm
     double precision :: bar1, bar2
     !character*200 msg
@@ -108,6 +110,7 @@ MODULE marker_data
     mark_phase(kk) = iph
     mark_zpressn(kk) = xxpres
     mark_Emeltm(kk) = xxmelt
+    mark_Fcrust(kk) = xcmelt 
   end subroutine add_marker
 
 

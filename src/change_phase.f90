@@ -12,14 +12,14 @@ integer :: jj, j, i, iph, &
            jbelow, k, kinc, kk, n
 double precision, external :: stressI,stressII, strainII, srateII
 double precision :: yy, depth, press, &
-                    tmpr, trtmpr, trpres, trpres2, ystime,&
+                    tmpr, trtmpr, trpres, trpres2, ystime,Tliq_crust,Tsol_crust,Fmcrust, &
                     solidus, pmelt, total_phase_ratio,rogh,dh,dPT,dP,densT
 
 ! max. depth (m) of eclogite phase transition, no serpentinization below it
 real*8, parameter :: max_basalt_depth = 150.d3
 ! min. temperature (C) of eclogite phase transition
 real*8, parameter :: min_eclogite_temp = 400.d0
-real*8, parameter :: min_eclogite_depth = 20d3
+real*8, parameter :: min_eclogite_depth = 40d3
 real*8, parameter :: mantle_density = 3000.d0
 real*8, parameter :: max_melting_depth = 200.d3
 
@@ -32,7 +32,7 @@ ystime = time/365./24./3600./1.e6
 itmp = 0  ! indicates which element has phase-changed markers
 !$ACC end kernels
 
-!$OMP parallel private(kk,i,j,k,n,tmpr,depth,iph,press,dh,rogh,dP,dPT, &
+!$OMP parallel private(kk,i,j,k,n,tmpr,depth,Tsol_crust,Tliq_crust,Fmcrust,iph,press,dh,rogh,dP,dPT, &
 !$OMP                    jbelow,trpres,trpres2,kinc,yy,densT)
 !$OMP do schedule(guided)
 !$ACC parallel loop async(1)
@@ -55,20 +55,13 @@ do kk = 1 , nmarkers
 
     ! depth below the surface in m
     depth = 0.5d0*(cord(1,i,2)+cord(1,i+1,2)) - yy
-    
-    ! Lithostatic pressure
-      press = 0.
-      rogh  = 0.
-      do jj = 1,j
-          densT= den(k) * (1.-alfa(k)*tmpr)
-          dh  = 0.5*(cord(jj,i,2)-cord(jj+1,i,2) + cord(jj,i+1,2)-cord(jj+1,i+1,2))
-          dPT = den(k) * (1.-alfa(k)*tmpr)*g*dh
-          dP = dPT*(1.-beta(k)*rogh)/(1.+beta(k)/2.*dPT)
-          press = rogh + 0.5*dP
-          rogh = rogh + dP
-    enddo
-
-    ! # of markers inside quad
+    ! Calculate the crustal solidus
+     Tsol_crust = 650. +100.*(-stressI(j,i)/1.e9) 
+    ! Calculate teh liquidus
+     Tliq_crust = Tsol_crust + 250. 
+     ! initialise crustal melt 
+     Fmcrust = 0.
+     ! # of markers inside quad
     kinc = nmark_elem(j,i)
 
     ! If location of this element is too deep, this marker is already
@@ -92,13 +85,44 @@ do kk = 1 , nmarkers
         endif
         endif
         endif
-            
+
+        !! crust melts and changes phase to melted crust
+          if(tmpr.gt.Tsol_crust) then
+                  if (tmpr >= Tliq_crust) then
+                          Fmcrust =1
+                  else
+                         Fmcrust = (tmpr - Tsol_crust)/(Tliq_crust-Tsol_crust)
+                 endif
+                 if (Fmcrust.gt.0.) then 
+                     !$OMP atomic write
+                     itmp(j,i) = 1
+                     mark_phase(kk) = kmeltlc
+                     mark_Fcrust(kk) = Fmcrust
+                 endif
+            endif
+
+     case (kweakmc)
+           ! crust melts and changes phase to melted crust
+          if(tmpr.gt.Tsol_crust) then
+                  if (tmpr >= Tliq_crust) then
+                          Fmcrust =1
+                  else
+                         Fmcrust = (tmpr - Tsol_crust)/(Tliq_crust-Tsol_crust)
+                 endif
+                 if (Fmcrust.gt.0.) then
+                     !$OMP atomic write
+                     itmp(j,i) = 1
+                     mark_phase(kk) = kmeltlc
+                     mark_Fcrust(kk) = Fmcrust
+                 endif
+            endif
+
             
     case (kmant1,kmant2)
         ! subuducted oceanic crust below mantle, mantle is serpentinized
 !        if(depth > max_basalt_depth) cycle
 
-        if (tmpr.le.serpentine_temp) then
+        if (tmpr.le.serpentine_temp.and.depth.le.10.e3) then
              if (aps(j,i).ge.0.1) then
              !$OMP atomic write
                  itmp(j,i) = 1
@@ -114,12 +138,13 @@ do kk = 1 , nmarkers
         endif
         endif
     case (kocean1,kocean2,kmafic,ksills)
-        ! basalt -> eclogite
+        ! basalt -> granulite -> eclogite
         ! phase change pressure
         trpres = -0.3d9 + 2.2d6*tmpr
         trpres2 = 20.1d9 - 0.0375d9*tmpr
         press = -stressI( j, i)
         if (tmpr < min_eclogite_temp .or. depth < min_eclogite_depth .or. press < trpres .or. press < trpres2) cycle
+        if (tmpr > 1000.) cycle ! Max eclogite temprature.
         !$ACC atomic write
         !$OMP atomic write
         itmp(j,i) = 1

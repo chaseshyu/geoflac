@@ -61,15 +61,52 @@ if (itype_melting .ge. 1) then
     ! rho * cp * deltaT = rho * latent_heat * delta_fmagma
     ! Rearrage to: deltaT = delta_fmagma * latent_heat / cp
     ! This heat is distributed to the 4 corners evenly
-    !
+    
+    ! Melt recrystallization in mantle
+    !$OMP parallel do private(i,j,cp_eff,tmpr,fr_lambda,delta_fdun,deltaT) collapse(2)
+    !$ACC parallel loop collapse(2) async(1)
+    do i = 1,nx-1
+        do j = 1,nz-1
+            cp_eff = Eff_cp( j,i )
+            tmpr = 0.25d0*(temp0(j,i)+temp0(j+1,i)+temp0(j,i+1)+temp0(j+1,i+1))
+           ! fr_lambda = lambda_freeze * exp(-lambda_freeze_tdep * (tmpr-t_top))
+            !delta_fmagma = max(fmagma(j,i), fmagma(j,i) * dt * fr_lambda)
+            if (tmpr.le.1100.) then
+            delta_fdun = min(Eff_melt(j,i), Eff_melt(j,i) * exp(-dt/(2.*365.*24.*3600.)))
+          !  if (fmagma(j,i).gt.0.) write(*,*) i,j,fmagma(j,i),delta_fmagma  
+            Eff_melt(j,i) = Eff_melt(j,i) - delta_fdun
+
+            Eff_melt(j,i) = max(0.d0,Eff_melt(j,i))
+
+            ! latent heat released by freezing magma
+            deltaT = delta_fdun * latent_heat_magma / cp_eff / 4
+           ! if (fmagma(j,i).gt.0.) write(*,*) i,j,fmagma(j,i),delta_fmagma,deltaT
+            !$OMP atomic update
+            !$ACC atomic update
+            temp(j  ,i  ) = temp(j  ,i  ) + deltaT
+            !$OMP atomic update
+            !$ACC atomic update
+            temp(j  ,i+1) = temp(j  ,i+1) + deltaT
+            !$OMP atomic update
+            !$ACC atomic update
+            temp(j+1,i  ) = temp(j+1,i  ) + deltaT
+            !$OMP atomic update
+            !$ACC atomic update
+            temp(j+1,i+1) = temp(j+1,i+1) + deltaT
+            endif
+       end do
+    enddo
+
+     ! Melt recrystallization in crust
+    !$OMP end parallel do
     !$OMP parallel do private(i,j,cp_eff,tmpr,fr_lambda,delta_fmagma,deltaT) collapse(2)
     !$ACC parallel loop collapse(2) async(1)
     do i = 1,nx-1
         do j = 1,nz-1
             cp_eff = Eff_cp( j,i )
             tmpr = 0.25d0*(temp0(j,i)+temp0(j+1,i)+temp0(j,i+1)+temp0(j+1,i+1))
-            fr_lambda = lambda_freeze * exp(-lambda_freeze_tdep * (tmpr-t_top))
-            delta_fmagma = min(fmagma(j,i), fmagma(j,i) * dt * fr_lambda)
+            ! fr_lambda = lambda_freeze * exp(-lambda_freeze_tdep * (tmpr-t_top))
+            delta_fmagma = min(fmagma(j,i), fmagma(j,i) * exp(-dt/(2.*365.*24.*3600.)))
             fmagma(j,i) = fmagma(j,i) - delta_fmagma
 
             fmagma(j,i) = max(0.d0,fmagma(j,i))

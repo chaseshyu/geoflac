@@ -20,6 +20,6 @@ module phases
     integer, parameter :: khtmsz = 16
     integer, parameter :: kmeltlc = 17
     integer, parameter, dimension(6) :: mantle_phases = (/kmant1, kmant2, kserp, khtmsz, ksills, kocean1/)
-    integer, parameter, dimension(7) :: surface_phases = (/kcont1, kcont2, kweakmc, ksed1, ksed2, kocean2, kmafic/)
+    integer, parameter, dimension(8) :: surface_phases = (/kcont1, kcont2, kweakmc, ksed1, ksed2, kocean2, kmafic, kmeltlc/)
     
 end module phases
