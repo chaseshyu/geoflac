@@ -99,7 +99,9 @@ proftemp.dat   temperature profile dat.file
 ;ictherm, age (Myr.), tp1, tp2, nph_layer (N), x nodes 1 and 2
 ;    nph_layer (N), layer depth #1 (km), #2, ..., #N-1
 ;    layer phase #1, #2, ..., #N
-12, 100., 120, 15, 1, 334
+13, 100., 120, 15, 1, 334
+; for ictherm == 13, sfh, huc, hlc
+60., 6., 2.
      3,   30, 86
      2,    4,  8
 ;

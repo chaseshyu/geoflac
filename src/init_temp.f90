@@ -13,7 +13,6 @@ double precision :: age_1n, tp1n, tp2n, ratio, amp, y, pert, pert2
 double precision :: cond_c, cond_m, dens_c, dens_m, pi, diffusivity
 double precision :: ainitdepth, F, am, alc, xc, yc, xsfh, auc, xdz, zPotT
 integer :: kl, dum, ixtb1_new, ixtb2_new
-double precision :: shf, huc, hlc
 double precision :: Q(nz,nx)
 
 !  Read distribution of temperatures from the dat file
@@ -125,7 +124,7 @@ do i = 1, inhom
     endif
 enddo
 
-if (itype_melting .eq. 2) then
+if (ictherm(1) .eq. 13) then
     !!  geotherm of a given age accross the box with variable age
     cond_c = 2.3
     cond_m = 3.3
@@ -134,9 +133,9 @@ if (itype_melting .eq. 2) then
     pi = 3.14159
     diffusivity = 1.e-6
 
-    shf = 60.
-    huc = 6.
-    hlc = 2.
+    ! shf = 60.
+    ! huc = 6.
+    ! hlc = 2.
     ixtb1_new = 1
     ixtb2_new = nx
     !! Continental geotherm
@@ -155,8 +154,8 @@ if (itype_melting .eq. 2) then
                 yc = 0.25*(cord (j,i  ,2) + cord(j+1,i  ,2) + &
                         cord (j,i+1,2) + cord(j+1,i+1,2))
             endif
-            xsfh  = shf + 5.*exp(-((xc-g_x0)/g_width)**2.)
-            auc = (1. - F)*xsfh*1.e-3/(huc*1000.) ! UpperCrust heat generation
+            xsfh  = shf(1) + 5.*exp(-((xc-g_x0)/g_width)**2.)
+            auc = (1. - F)*xsfh*1.e-3/(huc(1)*1000.) ! UpperCrust heat generation
             ! Bootstrap through temps w depth
             temp(1,i) = t_top 
             Q(1,i) = xsfh*1.e-3 
@@ -173,21 +172,21 @@ if (itype_melting .eq. 2) then
             end if
 
             ! Upper crust
-            if (y.lt.huc) then
+            if (y.lt.huc(1)) then
                 temp(j+1,i) = temp(j,i) + (Q(j,i)/cond_c)*(xdz) - (auc)/(2.*cond_c)*(xdz**2)
                 Q(j+1,i) = Q(j,i) - auc*(xdz)
                 if (i .lt. nx) source(j,i) = auc*1.e-3
             endif
 
             ! Lower crust
-            if (y.ge.huc.and.y.lt.(hlc+huc)) then
+            if (y.ge.huc(1).and.y.lt.(hlc(1)+huc(1))) then
                 temp(j+1,i) = temp(j,i) + (Q(j,i)/cond_c)*(xdz) - (alc)/(2.*cond_c)*(xdz**2)
                 Q(j+1,i) = Q(j,i) - alc*(xdz)
                 if (i .lt. nx) source(j,i) = alc*1.e-3
             endif
                 
                 ! Mantle Lithosphere
-            if (y.ge.(hlc+huc).and.kl.eq.0) then
+            if (y.ge.(hlc(1)+huc(1)).and.kl.eq.0) then
                 temp(j+1,i) = temp(j,i) + (Q(j,i)/cond_m)*(xdz) - (am)/(2.*cond_m)*(xdz**2)
                 Q(j+1,i) = Q(j,i) - am*(xdz) 
                 if (i .lt. nx) source(j,i) = am*1.e-3
@@ -279,7 +278,7 @@ elseif (ictherm(n)==2) then
         temp(j,i) = tss + 2.d0/pi*(t_bot-t_top)*tt
         if(temp(j,i)>t_bot .or. y>yL0) temp(j,i) = t_bot
     enddo
-elseif (ictherm(n)==12) then
+elseif (ictherm(n)==12 .or. ictherm(n)==13) then
     !! Continental geotherm (plate cooling model with radiogenic heating)
     !
     ! Starting from the steady state (ss) solution as in T&S 3rd ed. Eq(4.30)
@@ -362,9 +361,8 @@ implicit none
 
 integer, intent(in) :: i1, i2
 double precision :: age_1n, tp1n, tp2n
-integer :: n, i, j, k
+integer :: n, i, j, k, icthermn
 double precision :: cond_c, cond_m, dens_c, dens_m, pi, diffusivity
-double precision :: shf, huc, hlc
 double precision :: tr, q_m, tm, age_init, diff_m, tau_d, y, tss, tt, pp, an
 double precision :: xhc, age_1_new
 
@@ -374,9 +372,9 @@ dens_c = 2700.
 dens_m = 3300.
 pi = 3.14159
 diffusivity = 1.e-6
-shf = 70.
-huc = 6.
-hlc = 2.
+! shf = 70.
+! huc = 6.
+! hlc = 2.
 age_1_new = 0.
 
 xhc = 0.
@@ -391,11 +389,12 @@ endif
 age_1n = age_1(n)
 tp1n = tp1(n)
 tp2n = tp2(n)
+icthermn = ictherm(n)
 
-if (itype_melting .eq. 2) then
-    tr= dens_c*hs*hr*hr*1.e+6/cond_c*exp(1.-exp(-(huc+hlc)/hr))
-    q_m = (t_bot-t_top-tr)/(((huc+hlc)*1000.)/cond_c+((200.e3-(xhc)*1000.))/cond_m)
-    tm  = t_top + (q_m/cond_c)*(huc+hlc)*1000. + tr
+if (icthermn .eq. 13) then
+    tr= dens_c*hs*hr*hr*1.e+6/cond_c*exp(1.-exp(-(huc(1)+hlc(1))/hr))
+    q_m = (t_bot-t_top-tr)/(((huc(1)+hlc(1))*1000.)/cond_c+((200.e3-(xhc)*1000.))/cond_m)
+    tm  = t_top + (q_m/cond_c)*(huc(1)+hlc(1))*1000. + tr
     age_init = age_1_new*3.14*1.e+7*1.e+6 + time
     diff_m = cond_m/1000./dens_m
     tau_d = 200.e3*200.e3/(pi*pi*diff_m)
@@ -405,7 +404,7 @@ if (itype_melting .eq. 2) then
             ! depth in km
             y = (cord(1,i,2)-cord(j,i,2))*1.e-3
             !  steady state part
-            if (y.le.(huc+hlc)) then
+            if (y.le.(huc(1)+hlc(1))) then
                 tss = t_top+(q_m/cond_c)*y*1000.+(dens_c*hs*hr*hr*1.e+6/cond_c)*exp(1.-exp(-y/hr))
             else
                 tss = tm + (q_m/cond_m)*1000.*(y-xhc)

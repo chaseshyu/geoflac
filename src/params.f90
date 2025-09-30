@@ -87,6 +87,7 @@ real*8 :: x0,z0,rxbo,rzbo,sizez_x(maxzone),sizez_y(maxzone), &
      t_top,t_bot,hs,hr,bot_bc, &
      hc(maxzone_age,maxzone_layer), &
      age_1(maxzone_age),tp1(maxzone_age),tp2(maxzone_age), &
+     shf(maxzone_age), huc(maxzone_age), hlc(maxzone_age), &
      plume_temp, plume_depth, &
      g,pisos,drosub,damp_vis, &
      angle_mzone,fmagma_max,ratio_mantle_mzone, &
@@ -120,6 +121,7 @@ real*8 :: x0,z0,rxbo,rzbo,sizez_x(maxzone),sizez_y(maxzone), &
 !$ACC     t_top,t_bot,hs,hr,bot_bc, &
 !$ACC     hc(maxzone_age,maxzone_layer), &
 !$ACC     age_1(maxzone_age),tp1(maxzone_age),tp2(maxzone_age), &
+!$ACC     shf(maxzone_age), huc(maxzone_age), hlc(maxzone_age), &
 !$ACC     plume_temp, plume_depth, &
 !$ACC     g,pisos,drosub,damp_vis, &
 !$ACC     angle_mzone,fmagma_max,ratio_mantle_mzone, &

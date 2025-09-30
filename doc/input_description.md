@@ -106,6 +106,7 @@
 |:------------|:-----:|:--------------|
 |**nzone-age**| int | # zones of different thermal and phase structures (max 32). |
 |**_ictherm(i),age-1(i),tp1(i),tp2(i),ixtb1(i),ixtb2(i)_**| int, 3 dbl, 2 int | See below. |
+|**_shf(i), huc(i), hlc(i)_**| 3 dbl | needed if _ictherm_== 13, surface heat flux (mW/m2); thickness of upper crust (km); thickness of lower crust (km).  |
 |**_nph-layer(i), hc(1, 2, ..., N-1)_**| int (N), N-1 dbl | depths of layer interfaces (km) |
 |**_iph-col(1, 2, ..., N-1, N)_**| N int | phase of each layer |
 * When **nzone-age** is greater than 0, the initial model will be divided into several columns. Each column has **nph-layer** layers of materials and its own thermal parameters.
@@ -113,6 +114,7 @@
     + 1: oceanic geotherm (half-space cooling model). **age-1** is the  thermal age (Myrs) of the plate.
     + 2: oceanic geotherm (plate cooling model). **age-1** is the  thermal age (Myrs) of the plate. **tp1** is the plate thickness (km).
     + 12: continental geotherm (plate cooling model with radiogenic heating in the crust). **age-1** is the  thermal age (Myrs) of the plate. **tp1** is the plate thickness (km). **tp2** is the Moho depth (km). Radiogenic parameters **hs** and **hr** from above.
+    + 13: same as 12 but with thermal dome. only can nzone == 1. need addisional parameters shf(i), huc(i), hlc(i).
     + 21: constant geothermal gradient for the top layer, then constant **t-bot** to the bottom. **age-1** is the layer thickness (km).
     + 22: constant geothermal gradient for the top two layers, then constant **t-bot** to the bottom. **age-1** is the temperature at the layer interface, **tp1** is top layer thickness (km). **tp2** is the combined top 2 layers thickness (km).
 * **nph-layer**: # (N) of layers in this zone (max 10)

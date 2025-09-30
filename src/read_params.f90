@@ -167,6 +167,16 @@ do i = 1, nzone_age
     read (4,*,err=1000) ictherm(i),age_1(i),tp1(i),tp2(i),ixtb1(i),ixtb2(i)
     line = line + 1
     call AdvanceToNextInputLine(4, line)
+    if (ictherm(i) == 13) then
+        ! check if nzone_age == 1 when ictherm == 13
+        if (nzone_age .ne. 1) then
+            print *, 'Error: ictherm=13 is only allowed for nzone_age=1!'
+            stop
+        endif
+        read(4,*,err=1000) shf(i), huc(i), hlc(i)
+        line = line + 1
+        call AdvanceToNextInputLine(4, line)
+    endif
     read(4,*,err=1000) nph_layer(i), (hc(i,j), j=1,nph_layer(i)-1)
     line = line + 1
     !print *, (hc(i,j), j=1,nph_layer(i)-1)
