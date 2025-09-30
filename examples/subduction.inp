@@ -86,6 +86,9 @@
 0              irtemp (0,1) (read temperature file or not)
 proftemp.dat   temperature profile dat.file
 ;
+; iplume, plume_temp (C), plume_depth (km)
+0, 1800., 90., 
+;
 ; Initial varying thermal age crust and mantle accross the box (see doc/input_description.md for the meaning of parameters)
 5              - nzone_age (number of zones of different age max 20)
 ;ictherm, age (Myr.), tp1, tp2, nph_layer (N), x nodes 1 and 2

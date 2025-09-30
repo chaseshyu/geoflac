@@ -29,7 +29,7 @@ integer :: nx,nz,nzonx,nzony,nelz_x(maxzone),nelz_y(maxzone), &
      nzone_age,ixtb1(maxzone_age),ixtb2(maxzone_age), &
      ictherm(maxzone_age), &
      nph_layer(maxzone_age),iph_col(maxzone_age, maxzone_layer), &
-     iph_col_trans(maxzone_age), &
+     iph_col_trans(maxzone_age),iplume, &
      if_hydro,nyhydro,iphsub, &
      movegrid,ndim,ifreq_visc,i_rey, &
      incoming_left,incoming_right, &
@@ -56,7 +56,7 @@ integer :: nx,nz,nzonx,nzony,nelz_x(maxzone),nelz_y(maxzone), &
 !$ACC     nzone_age,ixtb1(maxzone_age),ixtb2(maxzone_age), &
 !$ACC     ictherm(maxzone_age), &
 !$ACC     nph_layer(maxzone_age),iph_col(maxzone_age, maxzone_layer), &
-!$ACC     iph_col_trans(maxzone_age), &
+!$ACC     iph_col_trans(maxzone_age),iplume, &
 !$ACC     if_hydro,nyhydro,iphsub, &
 !$ACC     movegrid,ndim,ifreq_visc,i_rey, &
 !$ACC     incoming_left,incoming_right, &
@@ -87,6 +87,7 @@ real*8 :: x0,z0,rxbo,rzbo,sizez_x(maxzone),sizez_y(maxzone), &
      t_top,t_bot,hs,hr,bot_bc, &
      hc(maxzone_age,maxzone_layer), &
      age_1(maxzone_age),tp1(maxzone_age),tp2(maxzone_age), &
+     plume_temp, plume_depth, &
      g,pisos,drosub,damp_vis, &
      angle_mzone,fmagma_max,ratio_mantle_mzone, &
      latent_heat_magma,lambda_freeze,lambda_freeze_tdep, &
@@ -119,6 +120,7 @@ real*8 :: x0,z0,rxbo,rzbo,sizez_x(maxzone),sizez_y(maxzone), &
 !$ACC     t_top,t_bot,hs,hr,bot_bc, &
 !$ACC     hc(maxzone_age,maxzone_layer), &
 !$ACC     age_1(maxzone_age),tp1(maxzone_age),tp2(maxzone_age), &
+!$ACC     plume_temp, plume_depth, &
 !$ACC     g,pisos,drosub,damp_vis, &
 !$ACC     angle_mzone,fmagma_max,ratio_mantle_mzone, &
 !$ACC     latent_heat_magma,lambda_freeze,lambda_freeze_tdep, &

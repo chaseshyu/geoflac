@@ -152,6 +152,12 @@ else
     read(4,*,err=1000)
     line = line + 1
 endif
+
+! plume
+call AdvanceToNextInputLine(4, line)
+read(4,*,err=1000) iplume, plume_temp, plume_depth
+line = line + 1
+
 ! temp structure
 call AdvanceToNextInputLine(4, line)
 read (4,*,err=1000) nzone_age

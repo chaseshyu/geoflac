@@ -383,6 +383,24 @@ do i = 1,nx-1
 end do
 !$OMP end parallel do
 
+! ADDING A PERMANENT PLUME AT THE BOTTOM
+if (iplume.eq.1) then
+    !$OMP parallel do private(i,j,yc,xc) collapse(2)
+    do i = 1,nx
+        do j = 1,nz 
+            yc = (cord(1,i,2)-cord(j,i,2))*1.e-3
+            xc = cord (j ,i  ,1) 
+            if (yc.ge.plume_depth) then
+                temp(j,i) = plume_temp * exp(-((xc-g_x0)/g_width)**2.)
+                if (temp(j,i).le.bot_bc*exp(9.81*yc*0.00004)) then
+                    temp(j,i) = bot_bc*exp(9.81*yc*0.00004)
+                endif
+            endif
+        enddo
+    enddo
+    !$OMP end parallel do
+endif
+
 ! Boundary conditions: dt/dx =0 on left and right  
 !$ACC parallel loop async(1)
 !$OMP parallel do private(j)

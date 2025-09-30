@@ -90,6 +90,9 @@
 0              irtemp (0,1) (read temperature file or not)
 proftemp.dat   temperature profile dat.file
 ;
+; iplume, plume_temp (C), plume_depth (km)
+0, 1800., 90., 
+;
 ; If (iynts = 2) Initially Variable thermal age continental and oceanic lithosphere accross the box (for convenience cont crust iph=1,
 ; oceanic crust iph = 2, oceanic mantle (dry) iph = 3, continental mantle (wet weak) iph = 4)
 1              - nzone_age (number of zones of different age max 20)

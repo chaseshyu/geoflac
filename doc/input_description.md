@@ -98,7 +98,7 @@
 |**irtemp**| int | Initial thermal distributions from a file? 0-no, 1-yes.|
 |**tempfile**| string | Filename containing temperature distribution. When **irtemp**=0, this file is read.  File format is one column of temperatures written in blocks of nz, looping over nx.  E.g., `do ix=1,nx; do iz=1,nz; read T(iz,ix); enddo; enddo;`|
 |**time-scale** | dbl | not used.|
-
+|**iplume, plume_temp, plume_depth**| int, 2 dbl | Bottom plume? 0-no, 1-yes. Temperature of plume (C)., Depth of plume (km).|
 
 ## INITIAL STRUCTURE
 
